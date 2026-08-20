@@ -26,7 +26,7 @@
   "kv_namespaces": [
     {
       "binding": "RATE_LIMIT",
-      "id": "paste-the-id-from-wrangler-kv-namespace-create"
+      "id": "9869ae2e17b54fad86f7da17be7274d3"
     }
   ]
   // Secrets (NOT set here — set via `wrangler secret put <NAME>`):
