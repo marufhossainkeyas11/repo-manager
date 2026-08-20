@@ -1,4 +1,4 @@
-import { getTree, commitChanges } from "./github.js";
+import { getTree, commitChanges, getBlob, getRepoInfo } from "./github.js";
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -35,7 +35,6 @@ async function getRateState(env, ip) {
 
 async function setRateState(env, ip, state) {
   if (!env.RATE_LIMIT) return;
-  // TTL a bit beyond the max lock window so stale entries clean themselves up.
   await env.RATE_LIMIT.put(`login:${ip}`, JSON.stringify(state), {
     expirationTtl: MAX_LOCK_SECONDS + 300,
   });
@@ -88,10 +87,29 @@ export default {
           return json(tree);
         }
 
+        if (url.pathname === "/api/repo" && request.method === "GET") {
+          const info = await getRepoInfo(env);
+          return json({
+            owner: env.GITHUB_OWNER,
+            repo: env.GITHUB_REPO,
+            branch: env.GITHUB_BRANCH || "main",
+            defaultBranch: info.default_branch,
+            private: info.private,
+            htmlUrl: info.html_url,
+          });
+        }
+
+        if (url.pathname === "/api/blob" && request.method === "GET") {
+          const sha = url.searchParams.get("sha");
+          if (!sha) return json({ error: "Missing sha" }, 400);
+          const blob = await getBlob(env, sha);
+          return json(blob);
+        }
+
         if (url.pathname === "/api/commit" && request.method === "POST") {
           const body = await request.json();
           const result = await commitChanges(env, {
-            message: body.message || "Update via github-file-manager",
+            message: body.message || "Update via repo-manager",
             additions: body.additions || [],
             deletions: body.deletions || [],
           });
