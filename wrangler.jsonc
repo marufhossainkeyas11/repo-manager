@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "github-file-manager",
+  "name": "repo-manager",
   "main": "src/index.js",
   // Update this to today's date when you deploy
   "compatibility_date": "2026-08-01",
