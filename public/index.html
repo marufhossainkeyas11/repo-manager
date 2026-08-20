@@ -1,53 +1,51 @@
 <!doctype html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Repo File Manager</title>
+<title>Repo Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* -- carried over from Cookie Vault, kept identical on purpose -- */
     --bg:#fdfbf7;
     --paper:#fffdf9;
     --paper-sunken:#faf5ec;
-    --ink:#3a352e;
+    --paper-raised:#ffffff;
+    --ink:#332e27;
     --ink-soft:#5a5346;
-    --muted:#8a8071;
+    --muted:#948a78;
     --line:#e6dcc9;
     --line-soft:#f0e9dd;
     --accent:#f0a04b;
-    --accent-dark:#d4842f;
+    --accent-dark:#c97a2e;
     --accent-wash:#f0a04b14;
     --accent-wash-strong:#f0a04b26;
-    --green:#5fa876;
+    --green:#4f9d6c;
     --green-bg:#eef6f0;
-    --coral:#e0654f;
+    --green-line:#cfe8d6;
+    --coral:#d85a42;
     --coral-bg:#fbeeec;
+    --coral-line:#f3d3cd;
     --blue:#3b6bc9;
+    --blue-bg:#eaf0fb;
+    --violet:#8067c9;
+    --violet-bg:#f1eefb;
     --mono:'Space Mono',ui-monospace,Consolas,monospace;
     --sans:'Inter',-apple-system,sans-serif;
-    --sans-bn:'Noto Sans Bengali','Inter',-apple-system,sans-serif;
 
     --fs-xs: 0.72rem;
-    --fs-sm: 0.85rem;
-    --fs-base: 1rem;
-    --fs-md: 1.15rem;
-    --fs-lg: 1.5rem;
+    --fs-sm: 0.83rem;
+    --fs-base: 0.95rem;
+    --fs-md: 1.1rem;
+    --fs-lg: 1.4rem;
 
-    --sp-1: 4px;
-    --sp-2: 8px;
-    --sp-3: 12px;
-    --sp-4: 16px;
-    --sp-5: 24px;
-    --sp-6: 32px;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
 
-    --radius-sm: 8px;
-    --radius-md: 14px;
-    --radius-lg: 22px;
-    --shadow-card: 0 2px 0 var(--line);
+    --radius-sm: 7px; --radius-md: 12px; --radius-lg: 20px;
+    --shadow-card: 0 1px 0 var(--line);
     --shadow-float: 0 20px 44px -18px rgba(120,95,55,.35);
+    --shadow-pop: 0 10px 30px -10px rgba(90,70,40,.25);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -55,16 +53,18 @@
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font-family: var(--sans-bn);
+    font-family: var(--sans);
     font-size: var(--fs-base);
     -webkit-font-smoothing: antialiased;
   }
   ::selection { background: var(--accent-wash-strong); }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
+  button { font: inherit; }
   code, .mono { font-family: var(--mono); }
+  svg { display: block; flex-shrink: 0; }
 
   /* ---------- login ---------- */
   #login {
@@ -73,10 +73,13 @@
     align-items: center;
     justify-content: center;
     padding: var(--sp-5);
+    background:
+      radial-gradient(600px 300px at 15% 10%, var(--accent-wash), transparent),
+      var(--bg);
   }
   .login-card {
     width: 100%;
-    max-width: 360px;
+    max-width: 380px;
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
@@ -85,25 +88,31 @@
     text-align: center;
   }
   .login-mark {
-    width: 44px; height: 44px;
+    width: 46px; height: 46px;
     margin: 0 auto var(--sp-4);
     border-radius: var(--radius-sm);
-    background: var(--accent-wash-strong);
-    color: var(--accent-dark);
+    background: var(--ink);
+    color: var(--accent);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-weight: 700; font-size: var(--fs-md);
   }
-  #login h1 { font-size: var(--fs-md); font-weight: 700; margin: 0 0 6px; }
+  #login h1 { font-size: var(--fs-md); font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; }
   #login p.sub { color: var(--muted); margin: 0 0 var(--sp-5); font-size: var(--fs-sm); }
+  #login .repo-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: var(--fs-xs);
+    background: var(--paper-sunken); border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px 11px; color: var(--ink-soft);
+    margin-bottom: var(--sp-5);
+  }
   #login input {
     width: 100%;
-    padding: 11px 13px;
+    padding: 12px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--line);
     background: var(--paper-sunken);
     color: var(--ink);
     font-size: var(--fs-base);
-    font-family: var(--sans-bn);
+    font-family: var(--sans);
   }
   #login input:focus { border-color: var(--accent); }
   #login .field { margin-bottom: var(--sp-3); }
@@ -112,140 +121,183 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 18px;
+    gap: 7px;
+    padding: 10px 16px;
     border-radius: var(--radius-sm);
     border: 1px solid transparent;
     background: var(--ink);
     color: var(--paper);
     font-weight: 700;
     font-size: var(--fs-sm);
-    font-family: var(--sans-bn);
+    font-family: var(--sans);
     cursor: pointer;
-    transition: filter .15s ease, transform .05s ease;
+    transition: filter .15s ease, transform .05s ease, background .15s ease;
+    white-space: nowrap;
   }
-  .btn:hover { filter: brightness(1.15); }
+  .btn:hover { filter: brightness(1.2); }
   .btn:active { transform: translateY(1px); }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; filter:none; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; filter:none; }
   .btn.accent { background: var(--accent); color: #3a2708; }
-  .btn.secondary {
-    background: transparent;
-    color: var(--ink);
-    border-color: var(--line);
-    font-weight: 600;
-  }
+  .btn.secondary { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 600; }
   .btn.secondary:hover { background: var(--paper-sunken); filter: none; }
-  .btn.danger { background: var(--coral-bg); color: var(--coral); border-color: var(--coral); }
+  .btn.danger { background: var(--coral-bg); color: var(--coral); border-color: var(--coral-line); }
+  .btn.danger:hover { background: var(--coral); color: #fff; filter: none; }
+  .btn.ghost { background: transparent; color: var(--ink-soft); border-color: transparent; font-weight: 600; padding: 8px 10px; }
+  .btn.ghost:hover { background: var(--paper-sunken); filter: none; color: var(--ink); }
   .btn.block { width: 100%; }
+  .btn.sm { padding: 6px 11px; font-size: var(--fs-xs); }
+  .btn.icon { padding: 8px; }
 
-  #login .error {
-    color: var(--coral);
-    font-size: var(--fs-xs);
-    min-height: 16px;
-    margin-top: var(--sp-3);
-  }
+  #login .error { color: var(--coral); font-size: var(--fs-xs); min-height: 16px; margin-top: var(--sp-3); }
   #login .lockout {
-    color: var(--coral);
-    background: var(--coral-bg);
-    border: 1px solid var(--coral);
-    border-radius: var(--radius-sm);
-    padding: var(--sp-2) var(--sp-3);
-    font-size: var(--fs-xs);
-    margin-top: var(--sp-3);
+    color: var(--coral); background: var(--coral-bg); border: 1px solid var(--coral-line);
+    border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-xs); margin-top: var(--sp-3);
   }
 
   /* ---------- app shell ---------- */
   #app { display: none; height: 100vh; flex-direction: column; }
   header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--sp-3) var(--sp-5);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px var(--sp-4);
     border-bottom: 1px solid var(--line);
     background: var(--paper);
+    gap: var(--sp-3);
   }
-  header .brand { display: flex; align-items: center; gap: 10px; }
+  header .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
   header .brand .mark {
-    width: 26px; height: 26px;
-    border-radius: 7px;
-    background: var(--accent-wash-strong);
-    color: var(--accent-dark);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-weight: 700; font-size: 12px;
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--ink); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  header .repo {
-    font-family: var(--mono);
-    font-size: var(--fs-xs);
-    color: var(--muted);
+  header .brand .title { font-weight: 800; font-size: var(--fs-sm); letter-spacing: -0.01em; }
+  header .repo-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink-soft);
+    background: var(--paper-sunken); border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  header .repo-pill b { color: var(--ink); font-weight: 700; }
+  header .repo-pill .branch-badge {
+    display: inline-flex; align-items: center; gap: 4px; color: var(--accent-dark);
+  }
+  header .actions { display: flex; align-items: center; gap: 6px; }
+
+  main { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+
+  /* ---------- tree sidebar ---------- */
+  #treeSidebar {
+    width: 240px; flex-shrink: 0;
+    border-right: 1px solid var(--line);
     background: var(--paper-sunken);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 5px 12px;
+    overflow-y: auto;
+    padding: var(--sp-3) var(--sp-2);
   }
-  header .repo b { color: var(--ink); font-weight: 700; }
-
-  main { flex: 1; display: flex; overflow: hidden; }
-  .pane { overflow-y: auto; padding: var(--sp-5); }
-  #treePane { width: 46%; border-right: 1px solid var(--line); }
-  #stagePane { width: 54%; display: flex; flex-direction: column; }
-  #stageScroll { flex: 1; overflow-y: auto; padding: var(--sp-5); }
-
-  h2 {
-    font-size: var(--fs-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin: 0 0 var(--sp-3);
-    font-weight: 700;
-    font-family: var(--sans);
+  #treeSidebar .sidebar-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 700; padding: var(--sp-2) var(--sp-2) 6px;
   }
-  .toolbar { display: flex; gap: 8px; margin-bottom: var(--sp-3); }
-  .toolbar input[type="text"] {
-    flex: 1;
+  .tnode { user-select: none; }
+  .tnode-row {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 6px; border-radius: 6px; cursor: pointer;
+    font-size: 12.5px; color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .tnode-row:hover { background: var(--line-soft); }
+  .tnode-row.active { background: var(--accent-wash-strong); color: var(--ink); font-weight: 600; }
+  .tnode-row.drop-target { background: var(--accent-wash-strong); outline: 1.5px dashed var(--accent-dark); outline-offset: -1px; }
+  .tnode-row .chev { width: 12px; height: 12px; color: var(--muted); transition: transform .12s ease; flex-shrink: 0; }
+  .tnode-row .chev.open { transform: rotate(90deg); }
+  .tnode-row .chev.spacer { visibility: hidden; }
+  .tnode-row .folder-ic { color: var(--accent-dark); flex-shrink: 0; }
+  .tnode-children { margin-left: 14px; border-left: 1px solid var(--line-soft); padding-left: 4px; }
+  .tnode-children.collapsed { display: none; }
+
+  /* ---------- file list pane ---------- */
+  #filePane { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+  #breadcrumbBar {
+    display: flex; align-items: center; gap: 4px;
+    padding: 10px var(--sp-4);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+    flex-wrap: wrap;
+  }
+  #breadcrumbBar .crumb { cursor: pointer; padding: 3px 6px; border-radius: 5px; }
+  #breadcrumbBar .crumb:hover { background: var(--paper-sunken); color: var(--ink); }
+  #breadcrumbBar .crumb.current { color: var(--ink); font-weight: 700; }
+  #breadcrumbBar .sep { color: var(--line); }
+
+  #toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  #toolbar input[type="text"].search {
+    flex: 1; min-width: 140px;
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--line);
     background: var(--paper-sunken);
     color: var(--ink);
     font-size: var(--fs-sm);
-    font-family: var(--sans-bn);
+    font-family: var(--sans);
   }
-  .toolbar input[type="text"]:focus { border-color: var(--accent); }
+  #toolbar input[type="text"].search:focus { border-color: var(--accent); }
+  .toolbar-menu-wrap { position: relative; }
+  .menu-pop {
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
+    background: var(--paper-raised); border: 1px solid var(--line);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-pop);
+    padding: 6px; min-width: 190px; display: none;
+  }
+  .menu-pop.open { display: block; }
+  .menu-pop button {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    padding: 8px 10px; border-radius: 7px; border: none; background: none;
+    color: var(--ink); font-size: var(--fs-sm); text-align: left; cursor: pointer;
+  }
+  .menu-pop button:hover { background: var(--paper-sunken); }
+  .menu-pop button.danger-item { color: var(--coral); }
+  .menu-pop button.danger-item:hover { background: var(--coral-bg); }
+  .menu-pop hr { border: none; border-top: 1px solid var(--line-soft); margin: 5px 2px; }
 
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: var(--radius-sm);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    border: 1px solid transparent;
-  }
-  .row:hover { background: var(--paper-sunken); border-color: var(--line); }
-  .row .path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row .size { color: var(--muted); font-size: 11px; }
-  .row input[type="checkbox"] { accent-color: var(--accent-dark); }
-  .row input[type="text"].rename {
-    flex: 1;
-    background: var(--paper);
-    border: 1px solid var(--accent);
-    color: var(--ink);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    padding: 4px 7px;
-    border-radius: 6px;
-  }
-  .row .rename-btn {
-    color: var(--accent-dark);
+  #fileListScroll { flex: 1; overflow-y: auto; padding: var(--sp-2) var(--sp-4) var(--sp-4); }
+
+  .frow {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 8px; border-radius: var(--radius-sm);
+    font-size: 13px; border: 1px solid transparent;
     cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
   }
-  .row .rename-btn:hover { text-decoration: underline; }
+  .frow:hover { background: var(--paper-sunken); border-color: var(--line); }
+  .frow.dragging { opacity: 0.4; }
+  .frow.drop-target { background: var(--accent-wash-strong); border-color: var(--accent); }
+  .frow .ftype-ic { flex-shrink: 0; }
+  .frow .ftype-ic.folder { color: var(--accent-dark); }
+  .frow .ftype-ic.file { color: var(--muted); }
+  .frow .ftype-ic.image { color: var(--violet); }
+  .frow .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); }
+  .frow .size { color: var(--muted); font-size: 11px; font-family: var(--mono); flex-shrink: 0; }
+  .frow .row-actions { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
+  .frow:hover .row-actions { display: flex; }
+  .frow .row-actions button {
+    display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 6px; border: none; background: none;
+    color: var(--muted); cursor: pointer;
+  }
+  .frow .row-actions button:hover { background: var(--line-soft); color: var(--ink); }
+  .frow .row-actions button.danger:hover { background: var(--coral-bg); color: var(--coral); }
+  .frow input[type="checkbox"] { accent-color: var(--accent-dark); flex-shrink: 0; }
+  .frow input[type="text"].rename {
+    flex: 1; background: var(--paper); border: 1px solid var(--accent);
+    color: var(--ink); font-family: var(--mono); font-size: 13px; padding: 5px 8px; border-radius: 6px;
+  }
+  .frow.staged-add { background: var(--green-bg); }
+  .frow.staged-del { background: var(--coral-bg); text-decoration: line-through; opacity: 0.7; }
 
   #dropzone {
-    margin-top: var(--sp-5);
+    margin-top: var(--sp-4);
     border: 1.5px dashed var(--line);
     border-radius: var(--radius-md);
     padding: var(--sp-5) var(--sp-4);
@@ -254,75 +306,145 @@
     font-size: var(--fs-sm);
     cursor: pointer;
     background: var(--paper-sunken);
+    line-height: 1.6;
   }
+  #dropzone b { color: var(--ink-soft); }
   #dropzone.drag { border-color: var(--accent); color: var(--ink); background: var(--accent-wash); }
   #fileInput { display: none; }
 
+  .empty-state {
+    color: var(--muted); font-size: var(--fs-sm); padding: var(--sp-5) var(--sp-3);
+    text-align: center;
+  }
+  .empty-state .big { font-size: 28px; margin-bottom: 6px; }
+
+  /* ---------- editor/preview panel ---------- */
+  #editorPanel {
+    width: 44%; min-width: 320px; flex-shrink: 0;
+    border-left: 1px solid var(--line);
+    display: none;
+    flex-direction: column;
+    background: var(--paper);
+  }
+  #editorPanel.open { display: flex; }
+  #editorHeader {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--line);
+    gap: var(--sp-3);
+  }
+  #editorHeader .ename { font-family: var(--mono); font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #editorHeader .actions { display: flex; gap: 6px; flex-shrink: 0; }
+  #editorBody { flex: 1; overflow: auto; display: flex; flex-direction: column; min-height: 0; }
+  #editorBody textarea {
+    flex: 1; width: 100%; border: none; resize: none; outline: none;
+    padding: var(--sp-4); font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    background: var(--paper); color: var(--ink); tab-size: 2;
+  }
+  #editorBody .img-preview { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--sp-5); overflow: auto; }
+  #editorBody .img-preview img { max-width: 100%; max-height: 100%; border-radius: var(--radius-sm); box-shadow: var(--shadow-card); }
+  #editorBody .no-preview { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--muted); font-size: var(--fs-sm); padding: var(--sp-5); text-align: center; }
+  #editorFooter { padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); font-family: var(--mono); display: flex; justify-content: space-between; }
+
+  /* ---------- staged changes drawer ---------- */
+  #stageDrawer {
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+    flex-shrink: 0;
+    max-height: 40vh;
+    display: flex; flex-direction: column;
+  }
+  #stageDrawerHeader {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px var(--sp-4);
+    cursor: pointer;
+  }
+  #stageDrawerHeader .left { display: flex; align-items: center; gap: 10px; }
+  #stageDrawerHeader .stage-count {
+    font-family: var(--mono); font-size: var(--fs-xs); font-weight: 700;
+    background: var(--ink); color: var(--paper); border-radius: 999px; padding: 2px 9px;
+  }
+  #stageDrawerHeader .stage-count.zero { background: var(--line); color: var(--muted); }
+  #stageDrawerHeader .diffstat { font-family: var(--mono); font-size: 11px; display: flex; gap: 8px; }
+  #stageDrawerHeader .diffstat .add { color: var(--green); }
+  #stageDrawerHeader .diffstat .del { color: var(--coral); }
+  #stageDrawerHeader .chev { width: 14px; height: 14px; color: var(--muted); transition: transform .15s ease; }
+  #stageDrawerHeader .chev.collapsed { transform: rotate(180deg); }
+  #stageList { overflow-y: auto; padding: 0 var(--sp-4); }
+  #stageList.collapsed { display: none; }
   .diffRow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--mono);
-    font-size: 12.5px;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12.5px;
+    padding: 6px 10px; border-radius: var(--radius-sm); margin-bottom: 4px;
     border: 1px solid transparent;
   }
-  .diffRow.add { background: var(--green-bg); border-color: #cfe8d6; }
-  .diffRow.del { background: var(--coral-bg); border-color: #f3d3cd; }
-  .diffRow .mark { width: 14px; font-weight: 700; }
+  .diffRow.add { background: var(--green-bg); border-color: var(--green-line); }
+  .diffRow.del { background: var(--coral-bg); border-color: var(--coral-line); }
+  .diffRow.move { background: var(--blue-bg); border-color: #cfe0f8; }
+  .diffRow .mark { width: 14px; font-weight: 700; flex-shrink: 0; }
   .diffRow.add .mark { color: var(--green); }
   .diffRow.del .mark { color: var(--coral); }
+  .diffRow.move .mark { color: var(--blue); }
   .diffRow .path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .diffRow .remove { color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 4px; }
+  .diffRow .path .arrow { color: var(--muted); margin: 0 4px; }
+  .diffRow .remove { color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 4px; flex-shrink: 0; }
   .diffRow .remove:hover { color: var(--ink); }
-
-  .empty {
-    color: var(--muted);
-    font-size: var(--fs-sm);
-    padding: var(--sp-3) 2px;
-    font-family: var(--sans-bn);
-  }
-
   #commitBar {
-    border-top: 1px solid var(--line);
-    padding: var(--sp-4);
-    background: var(--paper);
-    display: flex;
-    gap: 10px;
+    border-top: 1px solid var(--line-soft);
+    padding: var(--sp-3) var(--sp-4);
+    display: flex; gap: 10px; flex-shrink: 0;
   }
   #commitMsg {
-    flex: 1;
-    padding: 10px 13px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
-    background: var(--paper-sunken);
-    color: var(--ink);
-    font-size: var(--fs-sm);
-    font-family: var(--sans-bn);
+    flex: 1; padding: 10px 13px; border-radius: var(--radius-sm);
+    border: 1px solid var(--line); background: var(--paper-sunken); color: var(--ink);
+    font-size: var(--fs-sm); font-family: var(--sans);
   }
   #commitMsg:focus { border-color: var(--accent); }
 
-  #status { position: fixed; bottom: 16px; right: 16px; max-width: 360px; z-index: 50; }
+  #status { position: fixed; bottom: 16px; right: 16px; max-width: 380px; z-index: 100; }
   .toast {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    padding: 11px 14px;
-    font-size: var(--fs-sm);
-    margin-top: 8px;
-    box-shadow: var(--shadow-float);
-    font-family: var(--sans-bn);
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 11px 14px; font-size: var(--fs-sm); margin-top: 8px; box-shadow: var(--shadow-float);
+    font-family: var(--sans);
   }
   .toast.err { border-color: var(--coral); color: var(--coral); }
   .toast.ok { border-color: var(--green); color: var(--green); }
   .toast a { color: inherit; text-decoration: underline; }
 
+  /* ---------- modal (new file/folder, settings) ---------- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(40,32,20,.35); z-index: 90;
+    display: none; align-items: center; justify-content: center; padding: var(--sp-5);
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 420px; background: var(--paper-raised);
+    border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-float);
+    padding: var(--sp-5);
+  }
+  .modal h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-md); font-weight: 800; }
+  .modal p.hint { color: var(--muted); font-size: var(--fs-xs); margin: 0 0 var(--sp-4); }
+  .modal input[type="text"], .modal input[type="password"] {
+    width: 100%; padding: 10px 13px; border-radius: var(--radius-sm);
+    border: 1px solid var(--line); background: var(--paper-sunken); color: var(--ink);
+    font-size: var(--fs-sm); font-family: var(--mono); margin-bottom: var(--sp-3);
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: var(--sp-2); }
+  .modal .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--sp-3) 0; border-bottom: 1px solid var(--line-soft); font-size: var(--fs-sm);
+  }
+  .modal .settings-row:last-child { border-bottom: none; }
+  .modal .settings-row .label { color: var(--ink-soft); }
+  .modal .settings-row .val { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+
+  @media (max-width: 900px) {
+    #editorPanel { position: fixed; inset: 0; z-index: 60; width: 100%; }
+  }
   @media (max-width: 760px) {
-    main { flex-direction: column; overflow-y: auto; }
-    #treePane, #stagePane { width: 100%; border-right: 0; border-bottom: 1px solid var(--line); }
-    #app { height: auto; min-height: 100vh; }
+    #treeSidebar { position: fixed; inset: 0; z-index: 55; width: 100%; display: none; }
+    #treeSidebar.mobile-open { display: block; }
   }
 </style>
 </head>
@@ -330,13 +452,16 @@
 
 <div id="login">
   <div class="login-card">
-    <div class="login-mark">RF</div>
-    <h1>Repo File Manager</h1>
-    <p class="sub">Cloudflare Worker-এ সেট করা অ্যাক্সেস পাসওয়ার্ড দাও</p>
+    <div class="login-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </div>
+    <h1>Repo Manager</h1>
+    <p class="sub">Enter the access password to continue</p>
+    <div class="repo-tag" id="loginRepoTag">connecting…</div>
     <div class="field">
       <input id="pw" type="password" placeholder="Access password" autofocus autocomplete="current-password" />
     </div>
-    <button id="loginBtn" class="btn accent block">ঢোকো</button>
+    <button id="loginBtn" class="btn accent block">Unlock</button>
     <div class="error" id="loginErr"></div>
     <div class="lockout" id="loginLockout" style="display:none;"></div>
   </div>
@@ -345,367 +470,127 @@
 <div id="app">
   <header>
     <div class="brand">
-      <div class="mark">RF</div>
-      <div class="repo">repo: <b id="repoName">—</b> · branch: <b id="branchName">—</b></div>
+      <div class="mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="title">Repo Manager</div>
+      <div class="repo-pill" id="repoPill">
+        <span>—</span>
+      </div>
     </div>
-    <button class="btn secondary" id="logoutBtn">Sign out</button>
+    <div class="actions">
+      <button class="btn ghost icon" id="settingsBtn" title="Settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.8"/></svg>
+      </button>
+      <button class="btn secondary sm" id="refreshBtn">Refresh</button>
+      <button class="btn secondary sm" id="logoutBtn">Sign out</button>
+    </div>
   </header>
   <main>
-    <section class="pane" id="treePane">
-      <h2>Repository files</h2>
-      <div class="toolbar">
-        <input type="text" id="search" placeholder="ফিল্টার করো (পাথ দিয়ে)..." />
-        <button class="btn danger" id="deleteSelectedBtn">Delete selected</button>
-      </div>
-      <div id="treeList"></div>
+    <nav id="treeSidebar">
+      <div class="sidebar-label">Folders</div>
+      <div id="treeRoot"></div>
+    </nav>
 
-      <div id="dropzone">
-        একটা zip ফাইল ড্রপ করো (ভেতরের ফাইলগুলো এক্সট্র্যাক্ট হয়ে লিস্টে আসবে, সিলেক্ট করে অ্যাড করতে পারবে)
-        — অথবা যেকোনো ফাইল সরাসরি ড্রপ করো
-        <input type="file" id="fileInput" multiple />
+    <section id="filePane">
+      <div id="breadcrumbBar"></div>
+      <div id="toolbar">
+        <input type="text" class="search" id="search" placeholder="Filter files in this folder…" />
+        <button class="btn secondary sm" id="deleteSelectedBtn" style="display:none;">Delete selected</button>
+        <div class="toolbar-menu-wrap">
+          <button class="btn accent sm" id="newMenuBtn">+ New</button>
+          <div class="menu-pop" id="newMenu">
+            <button id="newFolderBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              New folder
+            </button>
+            <button id="newFileBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 3v5h6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              New file
+            </button>
+            <hr />
+            <button id="uploadFilesBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Upload files or .zip
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="fileListScroll">
+        <div id="fileList"></div>
+        <div id="dropzone">
+          Drop files or a <b>.zip</b> here to add them to <span id="dropzoneTarget" class="mono">this folder</span><br/>
+          A zip is unpacked with its internal folder structure intact.
+          <input type="file" id="fileInput" multiple />
+        </div>
       </div>
     </section>
 
-    <section class="pane" id="stagePane">
-      <div id="stageScroll">
-        <h2>Staged changes</h2>
-        <div id="stageList"><div class="empty">কিছু এখনো স্টেজ করা হয়নি</div></div>
+    <section id="editorPanel">
+      <div id="editorHeader">
+        <div class="ename" id="editorName">—</div>
+        <div class="actions">
+          <button class="btn secondary sm" id="editorSaveBtn" style="display:none;">Save</button>
+          <button class="btn ghost icon" id="editorCloseBtn" title="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
       </div>
-      <div id="commitBar">
-        <input type="text" id="commitMsg" placeholder="Commit message" />
-        <button class="btn accent" id="commitBtn">Commit</button>
+      <div id="editorBody"></div>
+      <div id="editorFooter">
+        <span id="editorMeta"></span>
+        <span id="editorStatus"></span>
       </div>
     </section>
   </main>
+
+  <div id="stageDrawer">
+    <div id="stageDrawerHeader">
+      <div class="left">
+        <span class="stage-count zero" id="stageCount">0</span>
+        <span style="font-size:12.5px; color: var(--ink-soft); font-weight: 600;">Staged changes</span>
+        <span class="diffstat" id="diffstat"></span>
+      </div>
+      <svg class="chev" id="stageChev" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div id="stageList"><div class="empty-state">Nothing staged yet — edits, uploads, deletes, and moves will queue up here.</div></div>
+    <div id="commitBar">
+      <input type="text" id="commitMsg" placeholder="Commit message" />
+      <button class="btn accent" id="commitBtn">Commit</button>
+    </div>
+  </div>
+</div>
+
+<!-- New folder / new file / rename modal -->
+<div class="modal-backdrop" id="promptBackdrop">
+  <div class="modal">
+    <h3 id="promptTitle">New folder</h3>
+    <p class="hint" id="promptHint"></p>
+    <input type="text" id="promptInput" />
+    <div class="modal-actions">
+      <button class="btn secondary sm" id="promptCancel">Cancel</button>
+      <button class="btn accent sm" id="promptConfirm">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="settingsBackdrop">
+  <div class="modal">
+    <h3>Settings</h3>
+    <p class="hint">This Worker is wired to a single repository, matching the fine-grained token's scope.</p>
+    <div class="settings-row"><span class="label">Repository</span><span class="val" id="setRepo">—</span></div>
+    <div class="settings-row"><span class="label">Branch</span><span class="val" id="setBranch">—</span></div>
+    <div class="settings-row"><span class="label">Visibility</span><span class="val" id="setVisibility">—</span></div>
+    <div class="settings-row"><span class="label">View on GitHub</span><span class="val"><a id="setGhLink" href="#" target="_blank">Open ↗</a></span></div>
+    <div class="modal-actions">
+      <button class="btn secondary sm" id="settingsClose">Close</button>
+    </div>
+  </div>
 </div>
 
 <div id="status"></div>
 
-<script type="module">
-import { unzipSync, strToU8 } from "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm";
-
-const $ = (id) => document.getElementById(id);
-let PW = sessionStorage.getItem("gfm_pw") || "";
-let tree = [];           // current repo files: [{path, sha, size}]
-let staged = { add: new Map(), del: new Set() }; // add: path -> {content?,sha?,encoding}, del: set of paths
-
-// --- client-side lockout: slows down repeated wrong-password guesses.
-// This is a UX speed bump only, not real security (a script hitting the
-// Worker directly can ignore it). Real brute-force protection has to live
-// on the Worker itself — see README for the rate-limit note.
-const LOCK_KEY = "gfm_lock";
-function getLockState() {
-  try { return JSON.parse(localStorage.getItem(LOCK_KEY) || "null") || { fails: 0, until: 0 }; }
-  catch { return { fails: 0, until: 0 }; }
-}
-function setLockState(s) { localStorage.setItem(LOCK_KEY, JSON.stringify(s)); }
-function registerFailedAttempt() {
-  const s = getLockState();
-  s.fails += 1;
-  if (s.fails >= 3) {
-    const delaySeconds = Math.min(30 * 2 ** (s.fails - 3), 300); // 30s, 60s, 120s, ... cap 5min
-    s.until = Date.now() + delaySeconds * 1000;
-  }
-  setLockState(s);
-  return s;
-}
-function clearLockState() { setLockState({ fails: 0, until: 0 }); }
-function lockRemainingMs() { return Math.max(0, getLockState().until - Date.now()); }
-
-function toast(msg, kind = "") {
-  const el = document.createElement("div");
-  el.className = "toast" + (kind ? " " + kind : "");
-  el.innerHTML = msg;
-  $("status").appendChild(el);
-  setTimeout(() => el.remove(), 6000);
-}
-
-async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    ...opts,
-    headers: {
-      "Authorization": "Bearer " + PW,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
-  if (res.status === 401) {
-    sessionStorage.removeItem("gfm_pw");
-    showLogin();
-    throw new Error("Unauthorized");
-  }
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Request failed");
-  return data;
-}
-
-function showLogin() {
-  $("login").style.display = "flex";
-  $("app").style.display = "none";
-  updateLockoutUI();
-}
-
-async function showApp() {
-  $("login").style.display = "none";
-  $("app").style.display = "flex";
-  await loadTree();
-}
-
-async function loadTree() {
-  const data = await api("/api/tree");
-  tree = data.files;
-  $("repoName").textContent = data.branch ? (location.hostname) : "";
-  $("branchName").textContent = data.branch;
-  renderTree();
-}
-
-function renderTree() {
-  const filter = $("search").value.trim().toLowerCase();
-  const list = $("treeList");
-  list.innerHTML = "";
-  const visible = tree.filter((f) => !staged.del.has(f.path) && f.path.toLowerCase().includes(filter));
-  if (visible.length === 0) {
-    list.innerHTML = '<div class="empty">কোনো ফাইল নেই</div>';
-    return;
-  }
-  for (const f of visible) {
-    const row = document.createElement("div");
-    row.className = "row";
-    row.innerHTML = `
-      <input type="checkbox" data-path="${escapeAttr(f.path)}" class="sel" />
-      <span class="path">${escapeHtml(f.path)}</span>
-      <span class="size">${formatSize(f.size)}</span>
-      <span class="rename-btn" data-path="${escapeAttr(f.path)}">rename</span>
-    `;
-    list.appendChild(row);
-  }
-  list.querySelectorAll(".rename-btn").forEach((el) => {
-    el.addEventListener("click", () => startRename(el.dataset.path));
-  });
-}
-
-function startRename(oldPath) {
-  const row = [...document.querySelectorAll(".row")].find(
-    (r) => r.querySelector(".rename-btn")?.dataset.path === oldPath
-  );
-  if (!row) return;
-  const pathSpan = row.querySelector(".path");
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "rename";
-  input.value = oldPath;
-  pathSpan.replaceWith(input);
-  input.focus();
-  input.select();
-  const commit = () => {
-    const newPath = input.value.trim();
-    if (newPath && newPath !== oldPath) {
-      const f = tree.find((x) => x.path === oldPath);
-      stageDelete(oldPath);
-      stageAdd(newPath, { sha: f.sha });
-      toast(`রিনেম স্টেজ হয়েছে: <b>${escapeHtml(oldPath)}</b> → <b>${escapeHtml(newPath)}</b>`);
-    }
-    renderTree();
-  };
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") commit();
-    if (e.key === "Escape") renderTree();
-  });
-  input.addEventListener("blur", commit);
-}
-
-function stageAdd(path, entry) {
-  staged.del.delete(path);
-  staged.add.set(path, entry);
-  renderStage();
-}
-function stageDelete(path) {
-  staged.add.delete(path);
-  staged.del.add(path);
-  renderStage();
-}
-function unstage(path, type) {
-  if (type === "add") staged.add.delete(path);
-  else staged.del.delete(path);
-  renderStage();
-  renderTree();
-}
-
-function renderStage() {
-  const list = $("stageList");
-  const entries = [
-    ...[...staged.del].map((path) => ({ path, type: "del" })),
-    ...[...staged.add.keys()].map((path) => ({ path, type: "add" })),
-  ].sort((a, b) => a.path.localeCompare(b.path));
-  if (entries.length === 0) {
-    list.innerHTML = '<div class="empty">কিছু এখনো স্টেজ করা হয়নি</div>';
-    return;
-  }
-  list.innerHTML = "";
-  for (const e of entries) {
-    const row = document.createElement("div");
-    row.className = "diffRow " + e.type;
-    row.innerHTML = `
-      <span class="mark">${e.type === "add" ? "+" : "−"}</span>
-      <span class="path">${escapeHtml(e.path)}</span>
-      <span class="remove" data-path="${escapeAttr(e.path)}" data-type="${e.type}">✕</span>
-    `;
-    list.appendChild(row);
-  }
-  list.querySelectorAll(".remove").forEach((el) => {
-    el.addEventListener("click", () => unstage(el.dataset.path, el.dataset.type));
-  });
-}
-
-$("deleteSelectedBtn").addEventListener("click", () => {
-  const checked = [...document.querySelectorAll(".sel:checked")].map((el) => el.dataset.path);
-  if (checked.length === 0) return toast("আগে কিছু ফাইল সিলেক্ট করো");
-  checked.forEach(stageDelete);
-  renderTree();
-});
-
-// --- zip / file drop -> extract client-side -> stage as additions ---
-const dz = $("dropzone");
-dz.addEventListener("click", () => $("fileInput").click());
-["dragenter", "dragover"].forEach((ev) =>
-  dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("drag"); })
-);
-["dragleave", "drop"].forEach((ev) =>
-  dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove("drag"); })
-);
-dz.addEventListener("drop", (e) => handleFiles(e.dataTransfer.files));
-$("fileInput").addEventListener("change", (e) => handleFiles(e.target.files));
-
-async function handleFiles(fileList) {
-  for (const file of fileList) {
-    if (file.name.toLowerCase().endsWith(".zip")) {
-      await handleZip(file);
-    } else {
-      const buf = new Uint8Array(await file.arrayBuffer());
-      stageAdd(file.name, { content: bytesToBase64(buf), encoding: "base64" });
-      toast(`স্টেজ হয়েছে: <b>${escapeHtml(file.name)}</b>`);
-    }
-  }
-}
-
-async function handleZip(file) {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  let unzipped;
-  try {
-    unzipped = unzipSync(buf);
-  } catch (err) {
-    return toast("Zip এক্সট্র্যাক্ট করা যায়নি: " + err.message, "err");
-  }
-  const entries = Object.entries(unzipped).filter(([path, data]) => !path.endsWith("/") && data.length >= 0);
-  if (entries.length === 0) return toast("Zip-এ কোনো ফাইল পাওয়া যায়নি", "err");
-  for (const [path, data] of entries) {
-    stageAdd(path, { content: bytesToBase64(data), encoding: "base64" });
-  }
-  toast(`Zip থেকে <b>${entries.length}</b>টা ফাইল স্টেজ হয়েছে`);
-}
-
-function bytesToBase64(bytes) {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
-
-$("commitBtn").addEventListener("click", async () => {
-  const additions = [...staged.add.entries()].map(([path, v]) => ({ path, ...v }));
-  const deletions = [...staged.del];
-  if (additions.length === 0 && deletions.length === 0) return toast("কিছু স্টেজ করা নেই");
-  const message = $("commitMsg").value.trim() || `Update ${additions.length} file(s), delete ${deletions.length} file(s)`;
-  $("commitBtn").disabled = true;
-  try {
-    const result = await api("/api/commit", {
-      method: "POST",
-      body: JSON.stringify({ message, additions, deletions }),
-    });
-    toast(`কমিট হয়ে গেছে: <a href="${result.url}" target="_blank">${result.commitSha.slice(0, 7)}</a>`, "ok");
-    staged = { add: new Map(), del: new Set() };
-    $("commitMsg").value = "";
-    renderStage();
-    await loadTree();
-  } catch (err) {
-    toast("কমিট ব্যর্থ: " + err.message, "err");
-  } finally {
-    $("commitBtn").disabled = false;
-  }
-});
-
-$("search").addEventListener("input", renderTree);
-
-$("loginBtn").addEventListener("click", doLogin);
-$("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
-
-let lockTimer = null;
-function updateLockoutUI() {
-  const remaining = lockRemainingMs();
-  const box = $("loginLockout");
-  const btn = $("loginBtn");
-  const input = $("pw");
-  clearInterval(lockTimer);
-  if (remaining <= 0) {
-    box.style.display = "none";
-    btn.disabled = false;
-    input.disabled = false;
-    return;
-  }
-  btn.disabled = true;
-  input.disabled = true;
-  box.style.display = "block";
-  const tick = () => {
-    const ms = lockRemainingMs();
-    if (ms <= 0) { updateLockoutUI(); return; }
-    box.textContent = `অনেকবার ভুল পাসওয়ার্ড দেওয়া হয়েছে — ${Math.ceil(ms / 1000)} সেকেন্ড পর আবার চেষ্টা করো`;
-  };
-  tick();
-  lockTimer = setInterval(tick, 1000);
-}
-
-async function doLogin() {
-  if (lockRemainingMs() > 0) return;
-  const pw = $("pw").value;
-  if (!pw) return;
-  PW = pw;
-  $("loginBtn").disabled = true;
-  try {
-    await api("/api/tree");
-    sessionStorage.setItem("gfm_pw", pw);
-    clearLockState();
-    $("loginErr").textContent = "";
-    await showApp();
-  } catch (err) {
-    registerFailedAttempt();
-    $("loginErr").textContent = "পাসওয়ার্ড ভুল, বা রেপো/টোকেন কনফিগার করা নেই।";
-    updateLockoutUI();
-  } finally {
-    if (lockRemainingMs() <= 0) $("loginBtn").disabled = false;
-  }
-}
-
-$("logoutBtn").addEventListener("click", () => {
-  sessionStorage.removeItem("gfm_pw");
-  PW = "";
-  showLogin();
-});
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-function escapeAttr(s) { return escapeHtml(s); }
-function formatSize(n) {
-  if (n < 1024) return n + " B";
-  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
-  return (n / (1024 * 1024)).toFixed(1) + " MB";
-}
-
-updateLockoutUI();
-if (PW && lockRemainingMs() <= 0) showApp().catch(() => showLogin());
-else showLogin();
-</script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
