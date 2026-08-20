@@ -1,4 +1,4 @@
-import { unzipSync } from "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm";
+import { unzipSync, zipSync } from "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm";
 
 const $ = (id) => document.getElementById(id);
 
@@ -257,6 +257,7 @@ function renderFileList() {
   const list = $("fileList");
   list.innerHTML = "";
   $("deleteSelectedBtn").style.display = "none";
+  $("downloadSelectedBtn").style.display = "none";
 
   if (!node) { list.innerHTML = '<div class="empty-state">Folder not found — it may have just been removed.</div>'; return; }
 
@@ -322,16 +323,17 @@ function renderFileList() {
     row.querySelector(".rename-a").addEventListener("click", (e) => { e.stopPropagation(); promptRenameFile(f.path); });
     row.querySelector(".dup-a").addEventListener("click", (e) => { e.stopPropagation(); duplicateFile(f); });
     row.querySelector(".delete-a").addEventListener("click", (e) => { e.stopPropagation(); stageDelete(f.path); toast(`Staged delete: <b>${escapeHtml(f.path.split("/").pop())}</b>`); });
-    row.querySelector(".sel").addEventListener("change", updateDeleteSelectedVisibility);
+    row.querySelector(".sel").addEventListener("change", updateSelectionToolbar);
     row.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", JSON.stringify({ kind: "file", path: f.path })); row.classList.add("dragging"); });
     row.addEventListener("dragend", () => row.classList.remove("dragging"));
     list.appendChild(row);
   }
 }
 
-function updateDeleteSelectedVisibility() {
+function updateSelectionToolbar() {
   const any = document.querySelectorAll(".sel:checked").length > 0;
   $("deleteSelectedBtn").style.display = any ? "inline-flex" : "none";
+  $("downloadSelectedBtn").style.display = any ? "inline-flex" : "none";
 }
 
 function fileIcon(path) {
@@ -532,6 +534,56 @@ $("deleteSelectedBtn").addEventListener("click", () => {
   checked.forEach(stageDelete);
 });
 
+$("downloadSelectedBtn").addEventListener("click", async () => {
+  const checked = [...document.querySelectorAll(".sel:checked")].map((el) => el.dataset.path);
+  if (checked.length === 0) return toast("Select some files first.");
+  $("downloadSelectedBtn").disabled = true;
+  $("downloadSelectedBtn").textContent = "Zipping…";
+  try {
+    const zipEntries = {};
+    for (const path of checked) {
+      const name = path.includes("/") ? path.slice(path.lastIndexOf("/") + 1) : path;
+      const staged_ = staged.add.get(path);
+      let bytes;
+      if (staged_) {
+        bytes = base64ToBytes(staged_.content);
+      } else {
+        const f = tree.find((x) => x.path === path);
+        if (!f) continue;
+        const blob = await api(`/api/blob?sha=${encodeURIComponent(f.sha)}`);
+        bytes = base64ToBytes(blob.content.replace(/\n/g, ""));
+      }
+      // flat zip of just the selected files, by filename — folder structure
+      // isn't meaningful here since selections can span mixed folders
+      let finalName = name, n = 2;
+      while (zipEntries[finalName]) { finalName = appendSuffix(name, n); n++; }
+      zipEntries[finalName] = bytes;
+    }
+    const zipped = zipSync(zipEntries);
+    const blob = new Blob([zipped], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const folderName = currentFolder ? currentFolder.split("/").pop() : (repoInfo ? repoInfo.repo : "files");
+    a.href = url;
+    a.download = `${folderName}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast(`Downloaded <b>${checked.length}</b> file(s) as <b>${escapeHtml(folderName)}.zip</b>`, "ok");
+  } catch (err) {
+    toast("Couldn't build the zip: " + err.message, "err");
+  } finally {
+    $("downloadSelectedBtn").disabled = false;
+    $("downloadSelectedBtn").textContent = "Download as .zip";
+  }
+});
+
+function appendSuffix(name, n) {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? `${name.slice(0, dot)} (${n})${name.slice(dot)}` : `${name} (${n})`;
+}
+
 // ---------------- drag & drop move ----------------
 function handleDropOnFolder(targetFolder, dataStr) {
   if (!dataStr) return;
@@ -658,6 +710,22 @@ async function handleFiles(fileList) {
   }
 }
 
+// If every entry in the zip lives under one shared top-level folder (a common
+// side effect of zipping a folder directly, e.g. on a phone), that wrapper
+// folder is stripped so the wrapper's *contents* land directly in the target
+// folder — never a copy of the wrapper itself nested inside it.
+function stripCommonWrapper(paths) {
+  if (paths.length === 0) return null;
+  const firstSegs = paths[0].split("/");
+  if (firstSegs.length < 2) return null; // first entry is already top-level, nothing to strip
+  const candidate = firstSegs[0];
+  const allShareIt = paths.every((p) => {
+    const segs = p.split("/");
+    return segs.length >= 2 && segs[0] === candidate;
+  });
+  return allShareIt ? candidate : null;
+}
+
 async function handleZip(file) {
   const buf = new Uint8Array(await file.arrayBuffer());
   let unzipped;
@@ -666,13 +734,22 @@ async function handleZip(file) {
   } catch (err) {
     return toast("Couldn't extract zip: " + err.message, "err");
   }
-  const entries = Object.entries(unzipped).filter(([path, data]) => !path.endsWith("/") && data.length >= 0);
+  let entries = Object.entries(unzipped).filter(([path, data]) => !path.endsWith("/") && data.length >= 0);
   if (entries.length === 0) return toast("No files found in that zip.", "err");
+
+  const wrapper = stripCommonWrapper(entries.map(([p]) => p));
+  if (wrapper) {
+    entries = entries.map(([path, data]) => [path.slice(wrapper.length + 1), data]);
+  }
+
   for (const [path, data] of entries) {
     const targetPath = joinPath(currentFolder, path);
     stageAdd(targetPath, { content: bytesToBase64(data), encoding: "base64" });
   }
-  toast(`Unpacked <b>${entries.length}</b> file(s) from the zip into <b>${escapeHtml(currentFolder || "/")}</b>`);
+  const into = currentFolder || "the repo root";
+  toast(wrapper
+    ? `Unpacked <b>${entries.length}</b> file(s) from <b>${escapeHtml(wrapper)}/</b> straight into <b>${escapeHtml(into)}</b>`
+    : `Unpacked <b>${entries.length}</b> file(s) into <b>${escapeHtml(into)}</b>`);
 }
 
 function bytesToBase64(bytes) {
