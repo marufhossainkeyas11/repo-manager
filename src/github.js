@@ -29,6 +29,15 @@ async function getBranchRef(env) {
   return ghFetch(env, `${repoPath(env)}/git/ref/heads/${encodeURIComponent(branch)}`);
 }
 
+// Fetches a single blob's content by its sha (used for opening files in the editor/preview).
+export async function getBlob(env, sha) {
+  return ghFetch(env, `${repoPath(env)}/git/blobs/${sha}`);
+}
+
+export async function getRepoInfo(env) {
+  return ghFetch(env, repoPath(env));
+}
+
 // Returns a flat list of every file (blob) currently in the repo tree.
 export async function getTree(env) {
   const ref = await getBranchRef(env);
