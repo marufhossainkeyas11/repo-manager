@@ -48,10 +48,25 @@ function lockRemainingMs() { return Math.max(0, getLockState().until - Date.now(
 function toast(msg, kind = "") {
   const el = document.createElement("div");
   el.className = "toast" + (kind ? " " + kind : "");
-  el.innerHTML = msg;
+  const icon = kind === "ok"
+    ? '<svg class="toast-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : kind === "err"
+    ? '<svg class="toast-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
+    : '<svg class="toast-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  el.innerHTML = `${icon}<div class="toast-body">${msg}</div><button class="toast-close" title="Dismiss">${iconX()}</button>`;
   $("status").appendChild(el);
-  setTimeout(() => el.remove(), 6000);
+
+  el.querySelector(".toast-close").addEventListener("click", (e) => { e.stopPropagation(); el.remove(); });
+  el.addEventListener("click", (e) => {
+    if (e.target.closest("a") || e.target.closest(".toast-close")) return;
+    el.classList.toggle("collapsed");
+  });
+
+  const collapseTimer = setTimeout(() => el.classList.add("collapsed"), 4000);
+  const removeTimer = setTimeout(() => el.remove(), 9000);
+  el.addEventListener("mouseenter", () => { clearTimeout(collapseTimer); clearTimeout(removeTimer); });
 }
+function iconX() { return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`; }
 
 // ---------------- api ----------------
 async function api(path, opts = {}) {
@@ -90,7 +105,7 @@ async function showApp() {
 async function loadRepoInfo() {
   try {
     repoInfo = await api("/api/repo");
-    $("repoPill").innerHTML = `<b>${escapeHtml(repoInfo.repo)}</b>&nbsp;·&nbsp;<span class="branch-badge">⎇ ${escapeHtml(repoInfo.branch)}</span>`;
+    $("repoPill").innerHTML = `<span class="repo-pill-inner"><b>${escapeHtml(repoInfo.repo)}</b></span><span class="branch-badge">⎇ ${escapeHtml(repoInfo.branch)}</span>`;
     $("loginRepoTag").textContent = `${repoInfo.owner}/${repoInfo.repo}`;
     $("setRepo").textContent = `${repoInfo.owner}/${repoInfo.repo}`;
     $("setBranch").textContent = repoInfo.branch;
@@ -689,10 +704,21 @@ document.addEventListener("click", (e) => { if (!e.target.closest(".toolbar-menu
 
 // ---------------- zip / file drop -> extract client-side -> stage as additions ----------------
 const dz = $("dropzone");
-dz.addEventListener("click", () => $("fileInput").click());
+dz.addEventListener("click", (e) => {
+  // Slim (collapsed) state: first click just expands it, so a stray tap
+  // while scrolling doesn't accidentally pop the file picker open.
+  if (!dz.classList.contains("expanded") && !dz.classList.contains("drag")) {
+    dz.classList.add("expanded");
+    return;
+  }
+  $("fileInput").click();
+});
 ["dragenter", "dragover"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("drag"); }));
 ["dragleave", "drop"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove("drag"); }));
 dz.addEventListener("drop", (e) => handleFiles(e.dataTransfer.files));
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#dropzone") && dz.classList.contains("expanded")) dz.classList.remove("expanded");
+});
 $("fileInput").addEventListener("change", (e) => { handleFiles(e.target.files); e.target.value = ""; });
 
 function joinPath(dir, name) { return dir ? `${dir}/${name}` : name; }
