@@ -174,11 +174,14 @@
     display: flex; align-items: center; gap: 6px;
     font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink-soft);
     background: var(--paper-sunken); border: 1px solid var(--line);
-    border-radius: 999px; padding: 5px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    border-radius: 999px; padding: 5px 12px; min-width: 0;
+  }
+  header .repo-pill .repo-pill-inner {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
   }
   header .repo-pill b { color: var(--ink); font-weight: 700; }
   header .repo-pill .branch-badge {
-    display: inline-flex; align-items: center; gap: 4px; color: var(--accent-dark);
+    display: inline-flex; align-items: center; gap: 4px; color: var(--accent-dark); flex-shrink: 0;
   }
   header .actions { display: flex; align-items: center; gap: 6px; }
 
@@ -300,17 +303,29 @@
     margin-top: var(--sp-4);
     border: 1.5px dashed var(--line);
     border-radius: var(--radius-md);
-    padding: var(--sp-5) var(--sp-4);
     text-align: center;
     color: var(--muted);
     font-size: var(--fs-sm);
     cursor: pointer;
     background: var(--paper-sunken);
     line-height: 1.6;
+    transition: padding .15s ease, background .15s ease, border-color .15s ease;
+    overflow: hidden;
   }
   #dropzone b { color: var(--ink-soft); }
   #dropzone.drag { border-color: var(--accent); color: var(--ink); background: var(--accent-wash); }
   #fileInput { display: none; }
+
+  #dropzone .dz-full { display: none; padding: var(--sp-5) var(--sp-4); }
+  #dropzone .dz-slim {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px var(--sp-4); font-size: var(--fs-xs);
+  }
+  #dropzone .dz-slim svg { color: var(--muted); }
+  #dropzone.expanded .dz-full { display: block; }
+  #dropzone.expanded .dz-slim { display: none; }
+  #dropzone.drag .dz-slim { display: none; }
+  #dropzone.drag .dz-full { display: block; }
 
   .empty-state {
     color: var(--muted); font-size: var(--fs-sm); padding: var(--sp-5) var(--sp-3);
@@ -401,15 +416,39 @@
   }
   #commitMsg:focus { border-color: var(--accent); }
 
-  #status { position: fixed; bottom: 16px; right: 16px; max-width: 380px; z-index: 100; }
-  .toast {
-    background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
-    padding: 11px 14px; font-size: var(--fs-sm); margin-top: 8px; box-shadow: var(--shadow-float);
-    font-family: var(--sans);
+  #status {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    z-index: 200; width: 100%; max-width: 420px; padding: 0 14px; pointer-events: none;
   }
-  .toast.err { border-color: var(--coral); color: var(--coral); }
-  .toast.ok { border-color: var(--green); color: var(--green); }
+  .toast {
+    pointer-events: auto;
+    width: 100%;
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--paper-raised); border: 1px solid var(--line); border-left: 3px solid var(--ink-soft);
+    border-radius: var(--radius-sm);
+    padding: 10px 10px 10px 12px; font-size: var(--fs-sm); box-shadow: var(--shadow-pop);
+    font-family: var(--sans);
+    animation: toastIn .18s ease;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .toast .toast-icon { flex-shrink: 0; margin-top: 1px; color: var(--ink-soft); }
+  .toast.ok { border-left-color: var(--green); }
+  .toast.ok .toast-icon { color: var(--green); }
+  .toast.err { border-left-color: var(--coral); }
+  .toast.err .toast-icon { color: var(--coral); }
+  .toast .toast-body { flex: 1; min-width: 0; line-height: 1.4; color: var(--ink); word-wrap: break-word; }
+  .toast.err .toast-body { color: var(--coral); }
   .toast a { color: inherit; text-decoration: underline; }
+  .toast .toast-close {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 5px; border: none; background: none;
+    color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    margin: -2px -2px 0 0;
+  }
+  .toast .toast-close:hover { background: var(--line-soft); color: var(--ink); }
+  .toast.collapsed { padding: 6px 10px; }
+  .toast.collapsed .toast-body { display: none; }
+  .toast.collapsed { width: auto; border-radius: 999px; cursor: pointer; }
 
   /* ---------- modal (new file/folder, settings) ---------- */
   .modal-backdrop {
@@ -445,6 +484,14 @@
   @media (max-width: 760px) {
     #treeSidebar { position: fixed; inset: 0; z-index: 55; width: 100%; display: none; }
     #treeSidebar.mobile-open { display: block; }
+  }
+  @media (max-width: 520px) {
+    header .brand .title { display: none; }
+    header .brand .mark { width: 30px; height: 30px; }
+    header .repo-pill { flex: 1; min-width: 0; }
+    header .repo-pill span:first-child,
+    header .repo-pill b { overflow: hidden; text-overflow: ellipsis; }
+    #status { max-width: calc(100% - 28px); }
   }
 </style>
 </head>
@@ -520,8 +567,14 @@
       <div id="fileListScroll">
         <div id="fileList"></div>
         <div id="dropzone">
-          Drop files or a <b>.zip</b> here to add them to <span id="dropzoneTarget" class="mono">this folder</span><br/>
-          A zip is unpacked with its internal folder structure intact.
+          <div class="dz-slim">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Drop files or a .zip here to add them
+          </div>
+          <div class="dz-full">
+            Drop files or a <b>.zip</b> here to add them to <span id="dropzoneTarget" class="mono">this folder</span><br/>
+            A zip is unpacked with its internal folder structure intact.
+          </div>
           <input type="file" id="fileInput" multiple />
         </div>
       </div>
