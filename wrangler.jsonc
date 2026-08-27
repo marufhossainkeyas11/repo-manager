@@ -2,8 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "repo-manager",
   "main": "src/index.js",
-  // Update this to today's date whenever you next deploy
-  "compatibility_date": "2026-08-27",
+  // Update this to today's date when you deploy
+  "compatibility_date": "2026-08-01",
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"
@@ -12,34 +12,24 @@
     "enabled": true
   },
   "vars": {
-    // Optional bootstrap defaults — only used the very first time the app
-    // runs, before you've picked a repo from the in-app switcher. Once you
-    // select a repo in the UI, that choice is saved in the RATE_LIMIT KV
-    // namespace below and these vars are ignored from then on. Safe to
-    // leave blank.
-    "GITHUB_OWNER": "",
-    "GITHUB_REPO": "",
+    // The repo this worker is allowed to touch. Change these two.
+    "GITHUB_OWNER": "marufhossainkeyas11",
+    "GITHUB_REPO": "repo-manager",
+    // Branch to commit to
     "GITHUB_BRANCH": "main"
   },
-  // Required for the repo switcher (which repo/branch is active, plus your
-  // recent-repos list) to persist across devices, and recommended for the
-  // server-side login lockout. Create it once with:
-  //   wrangler kv namespace create RATE_LIMIT
-  // then REPLACE the "id" below with the one it prints — "REPLACE_ME" is a
-  // placeholder and deploy will fail (or the binding silently won't work)
-  // until you swap in your real namespace id. The Worker still boots
-  // without a working KV binding — it just can't remember your selected
-  // repo between sessions, and skips the lockout check.
+  // Optional but recommended: enables server-side brute-force lockout on
+  // the login password (per-IP, exponential backoff). Without this binding
+  // the Worker still runs fine — it just skips the lockout check.
+  // Create it once with: wrangler kv namespace create RATE_LIMIT
+  // then paste the returned id below.
   "kv_namespaces": [
     {
       "binding": "RATE_LIMIT",
-      "id": "REPLACE_ME_WITH_YOUR_KV_NAMESPACE_ID"
+      "id": "9869ae2e17b54fad86f7da17be7274d3"
     }
   ]
-  // Secrets (NOT set here — set via `wrangler secret put <name>`):
-  //   GITHUB_TOKEN     - a token with access to every repo you want to manage
-  //                      (fine-grained PAT scoped to "All repositories" or
-  //                      the specific ones you need, Contents: Read & write;
-  //                      or a classic PAT with the `repo` scope)
+  // Secrets (NOT set here — set via `wrangler secret put <NAME>`):
+  //   GITHUB_TOKEN     - fine-grained PAT, scoped to the repo above, Contents: Read & write
   //   ACCESS_PASSWORD  - a password of your choosing, used to log into this tool's UI
 }
