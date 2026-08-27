@@ -23,10 +23,23 @@
   // the Worker still runs fine — it just skips the lockout check.
   // Create it once with: wrangler kv namespace create RATE_LIMIT
   // then paste the returned id below.
+  //
+  // CONFIG stores the multi-repo registry (active repo + saved repo
+  // list + settings) so it can be changed at runtime from the Settings
+  // UI instead of editing this file and redeploying. Without this
+  // binding the app still works — it just falls back to the single
+  // repo defined in GITHUB_OWNER/GITHUB_REPO/GITHUB_BRANCH above and
+  // can't save additional repos.
+  // Create it once with: wrangler kv namespace create CONFIG
+  // then paste the returned id below.
   "kv_namespaces": [
     {
       "binding": "RATE_LIMIT",
       "id": "9869ae2e17b54fad86f7da17be7274d3"
+    },
+    {
+      "binding": "CONFIG",
+      "id": "REPLACE_WITH_YOUR_CONFIG_KV_ID"
     }
   ]
   // Secrets (NOT set here — set via `wrangler secret put <NAME>`):

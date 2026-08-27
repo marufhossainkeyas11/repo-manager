@@ -1,13 +1,5 @@
-import {
-  getTree,
-  commitChanges,
-  getBlob,
-  getRepoInfo,
-  getViewer,
-  listRepos,
-  searchRepos,
-  listBranches,
-} from "./github.js";
+import { getTree, commitChanges, getBlob, getRepoInfo, discoverRepos } from "./github.js";
+import { getRepoRegistry, getActiveRepo, saveRepoRegistry, repoId } from "./config.js";
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -68,50 +60,29 @@ async function clearFailedAttempts(env, ip) {
   await env.RATE_LIMIT.delete(`login:${ip}`);
 }
 
-// --- active repo + recents, stored server-side in KV so it's the same on
-// every device. Falls back to wrangler.jsonc vars (GITHUB_OWNER/REPO/BRANCH)
-// only as a bootstrap default the very first time, or if KV isn't bound.
-const ACTIVE_REPO_KEY = "repo-manager:active";
-const RECENT_REPOS_KEY = "repo-manager:recents";
-const MAX_RECENTS = 8;
-
-async function getActiveRepo(env) {
-  if (env.RATE_LIMIT) {
-    const raw = await env.RATE_LIMIT.get(ACTIVE_REPO_KEY);
-    if (raw) return JSON.parse(raw);
-  }
-  if (env.GITHUB_OWNER && env.GITHUB_REPO) {
-    return { owner: env.GITHUB_OWNER, repo: env.GITHUB_REPO, branch: env.GITHUB_BRANCH || "main" };
-  }
-  return null;
-}
-
-async function setActiveRepo(env, { owner, repo, branch }) {
-  const value = { owner, repo, branch: branch || "main" };
-  if (env.RATE_LIMIT) {
-    await env.RATE_LIMIT.put(ACTIVE_REPO_KEY, JSON.stringify(value));
-  }
-  return value;
-}
-
-async function getRecentRepos(env) {
-  if (!env.RATE_LIMIT) return [];
-  const raw = await env.RATE_LIMIT.get(RECENT_REPOS_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-
-async function pushRecentRepo(env, entry) {
-  if (!env.RATE_LIMIT) return;
-  const list = await getRecentRepos(env);
-  const key = `${entry.owner}/${entry.repo}`;
-  const filtered = list.filter((r) => `${r.owner}/${r.repo}` !== key);
-  filtered.unshift({ ...entry, lastOpened: Date.now() });
-  await env.RATE_LIMIT.put(RECENT_REPOS_KEY, JSON.stringify(filtered.slice(0, MAX_RECENTS)));
-}
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // /api/meta is intentionally NOT auth-gated: the login screen needs
+    // to show which repo it's connecting to before the user has typed a
+    // password. It only ever exposes owner/repo/branch (or {hidden:true}
+    // if the admin has turned that off in Settings) — nothing sensitive.
+    if (url.pathname === "/api/meta" && request.method === "GET") {
+      try {
+        const registry = await getRepoRegistry(env);
+        if (!registry.showRepoOnLogin || !registry.active) {
+          return json({ hidden: true });
+        }
+        return json({
+          owner: registry.active.owner,
+          repo: registry.active.repo,
+          branch: registry.active.branch || "main",
+        });
+      } catch {
+        return json({ hidden: true });
+      }
+    }
 
     if (url.pathname.startsWith("/api/")) {
       const ip = clientIp(request);
@@ -132,55 +103,37 @@ export default {
       await clearFailedAttempts(env, ip);
 
       try {
-        // ---- repo-scoped routes: owner/repo/branch come from query params,
-        // falling back to the stored active repo when omitted ----
-        const active = await getActiveRepo(env);
-        const qOwner = url.searchParams.get("owner");
-        const qRepo = url.searchParams.get("repo");
-        const qBranch = url.searchParams.get("branch");
-
         if (url.pathname === "/api/tree" && request.method === "GET") {
-          const owner = qOwner || active?.owner;
-          const repo = qRepo || active?.repo;
-          const branch = qBranch || active?.branch || "main";
-          if (!owner || !repo) return json({ error: "No repository selected yet." }, 400);
-          const tree = await getTree(env, owner, repo, branch);
+          const repoCfg = await getActiveRepo(env);
+          const tree = await getTree(env, repoCfg);
           return json(tree);
         }
 
         if (url.pathname === "/api/repo" && request.method === "GET") {
-          const owner = qOwner || active?.owner;
-          const repo = qRepo || active?.repo;
-          if (!owner || !repo) return json({ error: "No repository selected yet." }, 400);
-          const info = await getRepoInfo(env, owner, repo);
+          const repoCfg = await getActiveRepo(env);
+          const info = await getRepoInfo(env, repoCfg);
           return json({
-            owner,
-            repo,
-            branch: qBranch || active?.branch || info.default_branch,
+            owner: repoCfg.owner,
+            repo: repoCfg.repo,
+            branch: repoCfg.branch,
             defaultBranch: info.default_branch,
             private: info.private,
             htmlUrl: info.html_url,
-            description: info.description,
           });
         }
 
         if (url.pathname === "/api/blob" && request.method === "GET") {
-          const owner = qOwner || active?.owner;
-          const repo = qRepo || active?.repo;
           const sha = url.searchParams.get("sha");
-          if (!owner || !repo) return json({ error: "No repository selected yet." }, 400);
           if (!sha) return json({ error: "Missing sha" }, 400);
-          const blob = await getBlob(env, owner, repo, sha);
+          const repoCfg = await getActiveRepo(env);
+          const blob = await getBlob(env, repoCfg, sha);
           return json(blob);
         }
 
         if (url.pathname === "/api/commit" && request.method === "POST") {
           const body = await request.json();
-          const owner = body.owner || active?.owner;
-          const repo = body.repo || active?.repo;
-          const branch = body.branch || active?.branch || "main";
-          if (!owner || !repo) return json({ error: "No repository selected yet." }, 400);
-          const result = await commitChanges(env, owner, repo, branch, {
+          const repoCfg = await getActiveRepo(env);
+          const result = await commitChanges(env, repoCfg, {
             message: body.message || "Update via repo-manager",
             additions: body.additions || [],
             deletions: body.deletions || [],
@@ -188,33 +141,98 @@ export default {
           return json(result);
         }
 
-        // ---- account/identity ----
-        if (url.pathname === "/api/whoami" && request.method === "GET") {
-          const viewer = await getViewer(env);
-          return json({ login: viewer.login, name: viewer.name, avatarUrl: viewer.avatar_url });
-        }
+        // ---- multi-repo management ----
 
-        // ---- repo directory: list, search, recents, branches ----
         if (url.pathname === "/api/repos" && request.method === "GET") {
-          const q = url.searchParams.get("q");
-          const repos = q && q.trim() ? await searchRepos(env, q.trim()) : await listRepos(env);
-          const recents = await getRecentRepos(env);
-          return json({ repos, recents, active: await getActiveRepo(env) });
+          const registry = await getRepoRegistry(env);
+          return json(registry);
         }
 
-        if (url.pathname === "/api/repos/branches" && request.method === "GET") {
-          if (!qOwner || !qRepo) return json({ error: "Missing owner/repo" }, 400);
-          const branches = await listBranches(env, qOwner, qRepo);
-          return json({ branches });
+        if (url.pathname === "/api/repos/discover" && request.method === "GET") {
+          const q = url.searchParams.get("q") || "";
+          const repos = await discoverRepos(env, q);
+          return json(repos);
         }
 
-        // ---- switch the active repo (persists server-side, syncs all devices) ----
-        if (url.pathname === "/api/repos/select" && request.method === "POST") {
+        if (url.pathname === "/api/repos" && request.method === "POST") {
           const body = await request.json();
-          if (!body.owner || !body.repo) return json({ error: "Missing owner/repo" }, 400);
-          const value = await setActiveRepo(env, { owner: body.owner, repo: body.repo, branch: body.branch });
-          await pushRecentRepo(env, value);
-          return json({ active: value });
+          const owner = (body.owner || "").trim();
+          const repo = (body.repo || "").trim();
+          if (!owner || !repo) return json({ error: "owner and repo are required" }, 400);
+
+          // Verify access (and auto-resolve default branch) by actually
+          // hitting GitHub for this repo before we save anything.
+          let info;
+          try {
+            info = await getRepoInfo(env, { owner, repo, branch: body.branch || "main" });
+          } catch (err) {
+            return json(
+              { error: `Could not access ${owner}/${repo}. Check the name and that your token has access. (${String(err.message || err)})` },
+              400
+            );
+          }
+
+          const branch = body.branch || info.default_branch || "main";
+          const registry = await getRepoRegistry(env);
+          const id = repoId(owner, repo);
+          const existingIdx = registry.list.findIndex((r) => r.id === id);
+          const entry = {
+            id,
+            owner,
+            repo,
+            branch,
+            private: Boolean(info.private),
+            addedAt: existingIdx >= 0 ? registry.list[existingIdx].addedAt : new Date().toISOString(),
+            lastUsedAt: registry.list[existingIdx >= 0 ? existingIdx : -1]?.lastUsedAt || null,
+          };
+          if (existingIdx >= 0) {
+            registry.list[existingIdx] = entry;
+          } else {
+            registry.list.push(entry);
+          }
+          // First repo ever added becomes active automatically.
+          if (!registry.active) {
+            registry.active = { owner, repo, branch };
+          }
+          const saved = await saveRepoRegistry(env, registry);
+          return json(saved);
+        }
+
+        if (url.pathname === "/api/repos/active" && request.method === "PUT") {
+          const body = await request.json();
+          const owner = (body.owner || "").trim();
+          const repo = (body.repo || "").trim();
+          const registry = await getRepoRegistry(env);
+          const id = repoId(owner, repo);
+          const match = registry.list.find((r) => r.id === id);
+          if (!match) return json({ error: "That repo isn't in your list yet." }, 400);
+          registry.active = { owner: match.owner, repo: match.repo, branch: match.branch };
+          match.lastUsedAt = new Date().toISOString();
+          const saved = await saveRepoRegistry(env, registry);
+          return json(saved);
+        }
+
+        if (url.pathname === "/api/repos" && request.method === "DELETE") {
+          const owner = (url.searchParams.get("owner") || "").trim();
+          const repo = (url.searchParams.get("repo") || "").trim();
+          const registry = await getRepoRegistry(env);
+          const id = repoId(owner, repo);
+          if (registry.active && repoId(registry.active.owner, registry.active.repo) === id) {
+            return json({ error: "Switch to a different repo before removing this one." }, 400);
+          }
+          registry.list = registry.list.filter((r) => r.id !== id);
+          const saved = await saveRepoRegistry(env, registry);
+          return json(saved);
+        }
+
+        if (url.pathname === "/api/settings" && request.method === "PUT") {
+          const body = await request.json();
+          const registry = await getRepoRegistry(env);
+          if (typeof body.showRepoOnLogin === "boolean") {
+            registry.showRepoOnLogin = body.showRepoOnLogin;
+          }
+          const saved = await saveRepoRegistry(env, registry);
+          return json(saved);
         }
 
         return json({ error: "Not found" }, 404);
