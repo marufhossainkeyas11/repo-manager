@@ -14,7 +14,7 @@
   "vars": {
     // The repo this worker is allowed to touch. Change these two.
     "GITHUB_OWNER": "marufhossainkeyas11",
-    "GITHUB_REPO": "repo-manager-dev",
+    "GITHUB_REPO": "Repo-manager-dev",
     // Branch to commit to
     "GITHUB_BRANCH": "main"
   },
