@@ -1,8 +1,8 @@
+
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "repo-manager",
   "main": "src/index.js",
-  // Update this to today's date when you deploy
   "compatibility_date": "2026-08-01",
   "assets": {
     "directory": "./public",
@@ -12,24 +12,18 @@
     "enabled": true
   },
   "vars": {
-    // The repo this worker is allowed to touch. Change these two.
     "GITHUB_OWNER": "marufhossainkeyas11",
     "GITHUB_REPO": "repo-manager",
-    // Branch to commit to
     "GITHUB_BRANCH": "main"
   },
-  // Optional but recommended: enables server-side brute-force lockout on
-  // the login password (per-IP, exponential backoff). Without this binding
-  // the Worker still runs fine — it just skips the lockout check.
-  // Create it once with: wrangler kv namespace create RATE_LIMIT
-  // then paste the returned id below.
   "kv_namespaces": [
     {
       "binding": "RATE_LIMIT",
       "id": "9869ae2e17b54fad86f7da17be7274d3"
+    },
+    {
+      "binding": "CONFIG",
+      "id": "42ca553022494f55a30e807f0fe899d2"
     }
   ]
-  // Secrets (NOT set here — set via `wrangler secret put <NAME>`):
-  //   GITHUB_TOKEN     - fine-grained PAT, scoped to the repo above, Contents: Read & write
-  //   ACCESS_PASSWORD  - a password of your choosing, used to log into this tool's UI
 }
