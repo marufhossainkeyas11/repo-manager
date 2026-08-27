@@ -4,11 +4,12 @@
 // left completely untouched — file trees, blobs, and commits must always be
 // live, never served from cache.
 
-const CACHE_NAME = "repo-manager-shell-v1";
+const CACHE_NAME = "repo-manager-shell-v2";
 const SHELL_ASSETS = [
   "/",
   "/index.html",
   "/app.js",
+  "/app.css",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",

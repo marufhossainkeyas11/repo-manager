@@ -1,83 +1,78 @@
 # Repo Manager
 
-A full file manager for one specific GitHub repo — folder tree, inline text/code
-editor, image preview, drag-and-drop moves, and zip upload that unpacks into
-whatever folder you're browsing. Deploys as a single Cloudflare Worker; the
-GitHub token stays server-side (a Worker secret) and never reaches the browser.
+A full file manager for your GitHub repositories — switch between any repo your
+token can see, browse a folder tree, edit code inline, preview images,
+drag-and-drop to move things, and upload or download zips. Deploys as a single
+Cloudflare Worker; the GitHub token stays server-side (a Worker secret) and
+never reaches the browser.
 
-## What's new in this rebuild
+## What's new in this update
 
-- **Folder tree sidebar** (left) + file list (right), VS Code style, instead of
-  one flat file list.
-- **Zip upload respects the current folder.** Browse into `movies/`, drop a zip
-  there, and its internal structure unpacks under `movies/...` — same as any
-  other upload, it just preserves the zip's own folders instead of landing as
-  one flat file.
-- **New folder / new file** — new files open straight in the editor; empty
-  folders get a small `.gitkeep` so Git tracks them.
-- **Inline editor** for text/code files (`.js`, `.json`, `.md`, `.css`, etc.),
-  **image preview** on click for `.png/.jpg/.svg/...`, and a plain "no preview"
-  state for anything else (binary, video, etc.) — those still delete/move/rename
-  fine, just no in-browser view.
-- **Rename, duplicate, delete, and drag-and-drop move** for both files and
-  folders. Renaming or moving a folder re-stages every file inside it.
-- **Staged changes drawer** at the bottom — every add/delete/move queues up
-  with a compact diff view (`+added`, `−deleted`, `⇄moved`) before you write a
-  commit message and push it all as one commit.
-- **Settings panel** showing the connected repo, branch, and visibility.
-- **Installable as an app (PWA)** — an "Install" button appears (desktop
-  Chrome/Edge, Android Chrome) once the browser decides the app qualifies;
-  iOS Safari gets a one-time hint pointing at Share → Add to Home Screen,
-  since iOS has no install-prompt API. Installed, it opens in its own
-  window/icon with no browser chrome — no more re-typing the URL.
-- English-only UI throughout.
+- **Multiple repositories, one deployment.** A repo switcher (search + recents
+  + branch picker) lets you jump between any repo your token can access — no
+  more one-repo-per-deployment. The active repo and your recent list are saved
+  server-side in Workers KV, so they're the same on every device you sign in
+  from.
+- **Mobile-first layout.** On a phone, the folder tree, file list, and editor
+  behave like separate full-screen views with their own back/menu controls,
+  instead of being squeezed side-by-side. Desktop keeps the full three-pane
+  layout with everything visible at once.
+- **Select all / deselect all** for the current folder, plus a selection
+  counter, so bulk delete/zip work on everything at once instead of one
+  checkbox at a time.
+- **Zip a folder directly** — "Download this folder as .zip" in the toolbar
+  menu, and a per-row zip button on every folder — in addition to zipping a
+  mixed selection of files and folders.
+- **Editor extras**: Find-in-file (with next/previous and a match counter,
+  <kbd>Ctrl/Cmd+F</kbd>), Select all, and Copy all — reachable from the editor
+  toolbar and useful on both desktop and mobile.
+- **Reworked login**: a real show/hide password toggle, a plain "Login" button
+  (no vague "connecting…" text), and markup that plays nicely with browser
+  password managers/autofill.
+- **Settings panel** now shows who the token is signed in as, and has a
+  "Switch repository" shortcut alongside the existing repo/branch/visibility
+  info.
 
 ## How it works
 
-- Two API routes on the Worker: `GET /api/tree` (lists every file in the repo)
-  and `POST /api/commit` (any mix of add/delete/rename/move, pushed as a single
-  commit via GitHub's Git Data API). Two small additions: `GET /api/blob`
-  (fetches one file's content for the editor/preview) and `GET /api/repo`
-  (repo metadata for the header/settings panel).
-- The frontend is one static page (`public/index.html` + `public/app.js`). Zip
-  extraction happens client-side via the `fflate` library — the Worker only
-  ever receives the individual files you've actually staged, never the zip
-  itself.
+- API routes on the Worker:
+  - `GET /api/repos` — lists (or searches, via `?q=`) every repo the token can
+    see, plus your recent picks and the currently active repo.
+  - `GET /api/repos/branches` — branches for a given `owner`/`repo`.
+  - `POST /api/repos/select` — sets the active repo/branch (saved in KV).
+  - `GET /api/tree`, `GET /api/repo`, `GET /api/blob`, `POST /api/commit` — same
+    as before, but every one now takes `owner`/`repo`/`branch`, either as query
+    params or falling back to the active repo saved in KV.
+  - `GET /api/whoami` — confirms the token and shows the signed-in account.
+- The frontend is a static page (`public/index.html` + `public/app.css` +
+  `public/app.js`). Zip extraction/creation happens client-side via the
+  `fflate` library — the Worker only ever receives the individual files
+  you've actually staged, never a zip itself.
 - The Worker has its own password (`ACCESS_PASSWORD`) — without it, nobody can
   call `/api/*`.
 - A small service worker (`public/sw.js`) caches only the static shell
-  (HTML/JS/icons) for instant loads and installability — it never caches
+  (HTML/CSS/JS/icons) for instant loads and installability — it never caches
   `/api/*` responses, so the file tree, blobs, and commits are always live.
 
 ## Setup
 
-### 1. Create a fine-grained GitHub Personal Access Token
+### 1. Create a GitHub Personal Access Token with access to every repo you want
+
+Since this build manages *multiple* repositories from one token, scope it
+accordingly:
 
 GitHub → Settings → Developer settings → Personal access tokens →
 **Fine-grained tokens** → Generate new token
 
-- **Repository access**: select only the one repo (not all repos)
-- **Permissions**: only **Contents: Read and write** — nothing else needed
+- **Repository access**: "All repositories" (or manually pick every repo you
+  want to manage — you can add more later by editing the token's repo list)
+- **Permissions**: **Contents: Read and write** — nothing else needed
 - Copy the token now (it's shown once)
 
-This token only works on that one repo, not your whole account — the safest
-option.
+A classic PAT with the `repo` scope also works if you prefer that over
+fine-grained tokens.
 
-### 2. Configure
-
-In `wrangler.jsonc`, update:
-
-```jsonc
-"vars": {
-  "GITHUB_OWNER": "your-github-username",
-  "GITHUB_REPO": "your-repo-name",
-  "GITHUB_BRANCH": "main"
-}
-```
-
-(Already pointed at `marufhossainkeyas11/Cookie-Vault-Bookmark` — change if needed.)
-
-### 3. Set secrets
+### 2. Set secrets
 
 ```bash
 npm install -g wrangler   # if you don't have it
@@ -90,26 +85,31 @@ wrangler secret put ACCESS_PASSWORD
 # choose a password — this is what you log into the tool with
 ```
 
-### 4. (Optional but recommended) Turn on brute-force lockout
-
-To temporarily block an IP that keeps guessing the wrong password, create a KV
-namespace:
+### 3. Create the KV namespace (needed for repo switching + login lockout)
 
 ```bash
 wrangler kv namespace create RATE_LIMIT
 ```
 
 Paste the `id` it gives you into the `kv_namespaces` section of
-`wrangler.jsonc`. The Worker runs fine without this step too — it just skips
-the lockout check, so it's worth doing for production.
+`wrangler.jsonc` (a placeholder id is already there — replace it). This KV
+namespace now does double duty: it remembers which repo/branch is active
+(and your recent repos) across every device, and it powers the login
+lockout. The Worker still boots without it, but you'll lose both of those —
+worth doing before you rely on this day to day.
 
-How the lockout works: 5 wrong passwords from one IP triggers a 30-second
-block; each wrong attempt after that doubles the wait, up to 15 minutes. A
-correct password resets the counter. The frontend also shows a countdown, but
-the real protection is this server-side KV check — the frontend countdown
-can't stop a script hitting the Worker directly.
+`GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_BRANCH` in `wrangler.jsonc` are now
+optional — they're only used as a one-time bootstrap default before you've
+picked a repo in the in-app switcher. Safe to leave blank; just open the app
+and use "Switch repository" the first time.
 
-### 5. Deploy
+How the login lockout works: 5 wrong passwords from one IP triggers a
+30-second block; each wrong attempt after that doubles the wait, up to 15
+minutes. A correct password resets the counter. The frontend also shows a
+countdown, but the real protection is the server-side KV check — the
+frontend countdown can't stop a script hitting the Worker directly.
+
+### 4. Deploy
 
 ```bash
 npm install
@@ -117,9 +117,10 @@ wrangler deploy
 ```
 
 Wrangler prints a `*.workers.dev` URL — that's your file manager. Open it,
-enter the password from step 3, and you're in.
+log in with the password from step 2, and use **Switch repository** (prompted
+automatically the first time) to pick which repo to browse.
 
-### 6. Install it as an app
+### 5. Install it as an app
 
 Once deployed and opened once over HTTPS, most browsers will offer an
 **Install** button right in the header (and on the login screen). Tap it and
@@ -136,10 +137,12 @@ no address bar, no re-typing the URL.
 
 ## Notes
 
-- This Worker is scoped to one repo, matching the token's own scope. Managing
-  multiple repos would mean multiple deployments (or multiple tokens/vars),
-  which wasn't the shape asked for here — flag it if that changes and it's a
-  small extension of the same `github.js` layer.
+- Switching repos discards any staged (uncommitted) changes in the tool —
+  you'll get a confirmation prompt if you have any pending. Commit or discard
+  before switching.
 - Files over ~200 KB that aren't recognized as text open in a "no preview"
   state in the editor panel rather than trying to load a huge blob into a
   `<textarea>`.
+- The repo search box searches by name across repos your token can see; very
+  large accounts (hundreds of repos) may want to just type a few letters of
+  the name rather than browsing the full list.
