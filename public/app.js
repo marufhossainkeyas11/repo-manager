@@ -346,6 +346,7 @@ function renderFileList() {
         <button class="rename-a" title="Rename">${iconRename()}</button>
         <button class="move-a" title="Move to…">${iconMove()}</button>
         <button class="danger delete-a" title="Delete folder">${iconTrash()}</button>
+        <button class="row-more" title="More">${iconMoreDots()}</button>
       </div>
     `;
     row.querySelector(".sel").checked = selection.folders.has(f.path);
@@ -353,6 +354,11 @@ function renderFileList() {
     row.querySelector(".rename-a").addEventListener("click", (e) => { e.stopPropagation(); promptRenameFolder(f.path); });
     row.querySelector(".move-a").addEventListener("click", (e) => { e.stopPropagation(); promptMoveFolder(f.path); });
     row.querySelector(".delete-a").addEventListener("click", (e) => { e.stopPropagation(); deleteFolder(f.path); });
+    row.querySelector(".row-more").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      openContextMenu(r.right, r.bottom, f.path, "folder");
+    });
     row.querySelector(".sel").addEventListener("click", (e) => handleSelClick(e, f.path, "folder"));
     row.querySelector(".sel").addEventListener("change", (e) => { toggleSelection(f.path, "folder", e.target.checked); });
     row.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", JSON.stringify({ kind: "folder", path: f.path })); row.classList.add("dragging"); });
@@ -384,6 +390,7 @@ function renderFileList() {
         <button class="move-a" title="Move to…">${iconMove()}</button>
         <button class="dup-a" title="Duplicate">${iconDup()}</button>
         <button class="danger delete-a" title="Delete">${iconTrash()}</button>
+        <button class="row-more" title="More">${iconMoreDots()}</button>
       </div>
     `;
     row.querySelector(".sel").checked = selection.files.has(f.path);
@@ -392,6 +399,11 @@ function renderFileList() {
     row.querySelector(".move-a").addEventListener("click", (e) => { e.stopPropagation(); promptMoveFile(f.path); });
     row.querySelector(".dup-a").addEventListener("click", (e) => { e.stopPropagation(); duplicateFile(f); });
     row.querySelector(".delete-a").addEventListener("click", (e) => { e.stopPropagation(); stageDelete(f.path); toast(`Staged delete: <b>${escapeHtml(f.path.split("/").pop())}</b>`); });
+    row.querySelector(".row-more").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      openContextMenu(r.right, r.bottom, f.path, "file");
+    });
     row.querySelector(".sel").addEventListener("click", (e) => handleSelClick(e, f.path, "file"));
     row.querySelector(".sel").addEventListener("change", (e) => { toggleSelection(f.path, "file", e.target.checked); });
     row.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", JSON.stringify({ kind: "file", path: f.path })); row.classList.add("dragging"); });
@@ -556,6 +568,7 @@ function fileIcon(path) {
 function iconRename() { return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>`; }
 function iconMove() { return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 13h6M13 10l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
 function iconDup() { return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.8"/></svg>`; }
+function iconMoreDots() { return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/></svg>`; }
 function iconTrash() { return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6h12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>`; }
 
 // ---------------- staging ----------------

@@ -348,7 +348,7 @@
   .frow .ftype-ic.folder { color: var(--accent-dark); }
   .frow .ftype-ic.file { color: var(--muted); }
   .frow .ftype-ic.image { color: var(--violet); }
-  .frow .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); }
+  .frow .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); }
   .frow .size { color: var(--muted); font-size: 11px; font-family: var(--mono); flex-shrink: 0; }
   .frow .row-actions { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
   .frow:hover .row-actions { display: flex; }
@@ -364,6 +364,7 @@
     .frow .row-actions { display: flex; }
   }
   .frow .row-actions button:hover { background: var(--line-soft); color: var(--ink); }
+  .frow .row-actions .row-more { display: none; }
   .frow .row-actions button.danger:hover { background: var(--coral-bg); color: var(--coral); }
   .frow input[type="checkbox"] { accent-color: var(--accent-dark); flex-shrink: 0; }
   .frow input[type="text"].rename {
@@ -692,10 +693,14 @@
       border-bottom: 1px solid var(--line);
     }
     /* row actions: no more hover-gate on touch-width screens, and
-       tap targets grow to meet the ~44px mobile a11y guideline */
-    .frow .row-actions { display: flex; }
-    .frow .row-actions button { width: 40px; height: 40px; }
-    .frow input[type="checkbox"] { width: 20px; height: 20px; }
+       tap targets grow to meet the ~44px mobile a11y guideline —
+       but that eats horizontal space, so the size column drops and
+       the row itself tightens up to keep filenames readable */
+    .frow { gap: 6px; padding: 8px 4px; }
+    .frow .size { display: none; }
+    .frow .row-actions { display: flex; gap: 0; }
+    .frow .row-actions button { width: 38px; height: 38px; }
+    .frow input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; }
   }
   @media (max-width: 520px) {
     header .brand .title { display: none; }
@@ -708,6 +713,14 @@
     header .actions > #refreshBtn,
     header .actions > #logoutBtn { display: none; }
     #headerOverflowWrap { display: block; }
+
+    /* fold less-used row actions (move, duplicate) into the existing
+       right-click/long-press context menu trigger, so a file row only
+       carries rename + delete + "more" — leaving the filename room to
+       actually be readable on a narrow screen */
+    .frow .row-actions .move-a,
+    .frow .row-actions .dup-a { display: none; }
+    .frow .row-actions .row-more { display: flex; }
   }
 
   /* ---------- selection mode toolbar ---------- */
