@@ -12,7 +12,7 @@
   },
   "vars": {
     "GITHUB_OWNER": "marufhossainkeyas11",
-    "GITHUB_REPO": "Ip",
+    "GITHUB_REPO": "repo-manager",
     "GITHUB_BRANCH": "main"
   },
   "kv_namespaces": [
