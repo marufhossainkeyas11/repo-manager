@@ -1,3 +1,4 @@
+
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "repo-manager",
@@ -12,17 +13,17 @@
   },
   "vars": {
     "GITHUB_OWNER": "marufhossainkeyas11",
-    "GITHUB_REPO": "repaer",
+    "GITHUB_REPO": "repo-manager",
     "GITHUB_BRANCH": "main"
   },
   "kv_namespaces": [
     {
       "binding": "RATE_LIMIT",
-      "id": "9869ae2e17be7274d3"
+      "id": "9869ae2e17b54fad86f7da17be7274d3"
     },
     {
       "binding": "CONFIG",
-      "id": "42ca55302899d2"
+      "id": "42ca553022494f55a30e807f0fe899d2"
     }
   ]
 }
