@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Repo Manager</title>
+<link rel="icon" href="./favicon.ico" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<meta name="theme-color" content="#fdfbf7" />
+<link rel="apple-touch-icon" href="./icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles/base.css" />
+<link rel="stylesheet" href="./styles/login.css" />
+<link rel="stylesheet" href="./styles/layout.css" />
+<link rel="stylesheet" href="./styles/sidebar.css" />
+<link rel="stylesheet" href="./styles/file-list.css" />
+<link rel="stylesheet" href="./styles/editor.css" />
+<link rel="stylesheet" href="m/styles/stage-drawer.css" />
+<link rel="stylesheet" href="./styles/modals.css" />
+<link rel="stylesheet" href="m./styles/toast.css" />
+<link rel="stylesheet" href="m./styles/responsive.css" />
+</head>
+<body>
+
+<div id="status"></div>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="login">
+  <div class="login-card">
+    <div class="login-mark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    </div>
+    <h1>Repo Manager</h1>
+    <p class="sub">Sign in to manage your repository</p>
+    <span id="loginRepoTag" class="repo-tag" style="display:none"></span>
+    <div id="httpsWarning" class="https-warning">
+      ⚠ This connection isn't using HTTPS. Your password would be sent unencrypted — do not log in until this is fixed.
+    </div>
+    <form id="loginForm">
+      <div class="field pw-wrap">
+        <input type="password" id="pw" placeholder="Access password" autocomplete="current-password" />
+        <button type="button" id="pwToggle" class="pw-toggle" title="Show password" aria-label="Show password">
+          <svg id="pwToggleIcon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+      </div>
+      <div class="caps-hint" id="capsHint"></div>
+      <div class="remember-row">
+        <input type="checkbox" id="rememberMe" />
+        <label for="rememberMe">Remember me on this device</label>
+      </div>
+      <div id="rememberNote" class="remember-note" style="display:none">
+        Stored unencrypted in this browser's local storage. Don't enable this on a shared or public device.
+      </div>
+      <div class="security-note">Your password is sent once at login and never stored on the server.</div>
+      <button type="submit" id="loginBtn" class="btn accent block">Login</button>
+      <div class="error" id="loginErr"></div>
+      <div id="loginLockout" class="lockout" style="display:none"></div>
+    </form>
+    <button id="loginInstallBtn" class="btn secondary block" style="display:none;margin-top:10px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M7 11l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Install app
+    </button>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="title">Repo Manager</span>
+    </div>
+
+    <div id="repoPill" class="repo-pill" title="Repository">
+      <span class="repo-pill-inner"><b id="repoName">—</b></span>
+      <span class="branch-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 3v12M18 9v9M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM18 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM8.5 6c0 4 8 3 9.5 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span id="branchName">—</span>
+      </span>
+    </div>
+
+    <div class="actions">
+      <button id="hamburgerBtn" class="btn ghost icon" title="Browse folders">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <a id="repoLink" href="#" target="_blank" class="btn ghost icon" title="Open on GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 0 0-3.16 19.5c.5.1.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" fill="currentColor"/></svg>
+      </a>
+      <button id="refreshBtn" class="btn ghost icon" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="settingsBtn" class="btn ghost icon" title="Settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="installBtn" class="btn ghost icon" title="Install app" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M7 11l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button id="logoutBtn" class="btn ghost icon" title="Sign out">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div id="headerOverflowWrap" class="toolbar-menu-wrap">
+        <button id="headerOverflowBtn" class="btn ghost icon" title="More">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="19" r="1.7" fill="currentColor"/></svg>
+        </button>
+        <div id="headerOverflowMenu" class="menu-pop" style="right:0;left:auto;">
+          <button id="headerOverflowRefresh">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Refresh
+          </button>
+          <button id="headerOverflowInstall">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M7 11l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Install app
+          </button>
+          <hr />
+          <button id="headerOverflowLogout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="sidebarBackdrop"></div>
+    <div id="treeSidebar">
+      <div id="treeSidebarHeader">
+        <span class="sidebar-label" style="padding:0">Folders</span>
+        <button id="treeSidebarClose" class="btn ghost icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-label">Repository</div>
+      <div id="treeRoot"></div>
+    </div>
+    <div id="sidebarResizeHandle" class="resize-handle"></div>
+
+    <div id="filePane">
+      <div id="breadcrumbBar"></div>
+
+      <div id="toolbar">
+        <input type="checkbox" id="selectAllToggle" title="Select all" />
+        <input type="text" id="search" class="search" placeholder="Filter this folder…" />
+        <div class="toolbar-menu-wrap">
+          <button id="newMenuBtn" class="btn accent">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            New
+          </button>
+          <div id="newMenu" class="menu-pop" style="right:0;left:auto;">
+            <button id="newFileBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 3v5h6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              New file
+            </button>
+            <button id="newFolderBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              New folder
+            </button>
+            <hr />
+            <button id="uploadFilesBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Upload files…
+            </button>
+          </div>
+        </div>
+        <button id="deleteSelectedBtn" class="btn danger" style="display:none">Delete</button>
+
+        <div class="split-btn" style="display:none" id="downloadSplitWrap">
+          <button id="downloadSelectedBtn" class="btn secondary primary-part">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M7 11l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Download
+          </button>
+          <button id="downloadSplitToggle" class="btn secondary split-toggle" title="Download options">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div id="downloadSplitMenu" class="menu-pop">
+            <button id="downloadIndividuallyBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              Download files individually
+            </button>
+            <div class="menu-note">Skips zipping — each file downloads separately. Folder structure won't be preserved.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="selectionBar">
+        <input type="checkbox" id="selectionBarAllToggle" title="Select all" />
+        <span class="sel-count" id="selectionCount">0 selected</span>
+        <button id="selBarZipBtn" class="btn secondary sm">Download</button>
+        <button id="selBarDeleteBtn" class="btn danger sm">Delete</button>
+        <button id="selBarClearBtn" class="btn ghost sm">Cancel</button>
+      </div>
+
+      <div id="fileListScroll">
+        <div id="fileList"></div>
+        <div id="dropzone">
+          <div class="dz-slim">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Click or drag files here to upload to <span id="dropzoneTarget">the repo root</span>
+          </div>
+          <div class="dz-full">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 8px;color:var(--muted)"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <div>Drop files (or a .zip) here to upload to <b id="dropzoneTarget2">the repo root</b></div>
+          </div>
+        </div>
+        <input type="file" id="fileInput" multiple />
+      </div>
+    </div>
+
+    <div id="editorResizeHandle" class="resize-handle"></div>
+    <div id="editorPanel">
+      <div id="editorHeader">
+        <span class="ename" id="editorName">—</span>
+        <span class="ename" id="editorMeta" style="color:var(--muted);font-weight:400;flex-shrink:0"></span>
+        <div class="actions">
+          <button id="editorFindBtn" class="etool-btn etool-standalone" title="Find (Ctrl+F)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <button id="editorSelectAllBtn" class="etool-btn etool-standalone" title="Select all">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>
+          </button>
+          <button id="editorCopyBtn" class="etool-btn etool-standalone" title="Copy contents">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.8"/></svg>
+          </button>
+          <div class="etool-overflow-wrap">
+            <button id="editorOverflowBtn" class="etool-btn" title="More">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/></svg>
+            </button>
+            <div id="editorOverflowMenu" class="menu-pop" style="right:0;left:auto;">
+              <button id="editorOverflowSelectAll">Select all</button>
+              <button id="editorOverflowCopy">Copy contents</button>
+            </div>
+          </div>
+          <button id="editorSaveBtn" class="btn accent sm" style="display:none">Save</button>
+          <button id="editorCloseBtn" class="etool-btn" title="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="findBar">
+        <input type="text" id="findInput" placeholder="Find in file…" />
+        <span class="find-count" id="findCount"></span>
+        <button id="findPrevBtn" title="Previous (Shift+Enter)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="findNextBtn" title="Next (Enter)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="findCloseBtn" title="Close (Esc)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div id="editorBody"></div>
+      <div id="editorFooter">
+        <span id="editorStatus"></span>
+        <span></span>
+      </div>
+    </div>
+  </main>
+
+  <div id="stageDrawer">
+    <div id="stageDrawerHeader">
+      <div class="left">
+        <span class="stage-count zero" id="stageCount">0</span>
+        <span style="font-size:12.5px;font-weight:700;color:var(--ink-soft)">Staged changes</span>
+        <span class="diffstat" id="diffstat"></span>
+      </div>
+      <svg id="stageChev" class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div id="stageList"></div>
+    <div id="commitBar">
+      <input type="text" id="commitMsg" placeholder="Commit message (optional)" />
+      <button id="commitBtn" class="btn accent">Commit</button>
+    </div>
+  </div>
+
+  <div id="bottomNav">
+    <button id="navHomeBtn">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M3 10.5 12 3l9 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      Home
+    </button>
+    <button id="navNewBtn">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      New
+    </button>
+    <button id="navSelectBtn">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Select
+    </button>
+    <button id="navSearchBtn">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Search
+    </button>
+    <button id="navStagedBtn">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+      Staged
+      <span class="nav-badge" id="navStagedBadge">0</span>
+    </button>
+  </div>
+</div>
+
+<!-- ============ new-item bottom sheet (mobile) ============ -->
+<div id="newSheetBackdrop">
+  <div id="newSheet">
+    <div class="sheet-handle"></div>
+    <button id="newSheetFile">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 3v5h6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      New file
+    </button>
+    <button id="newSheetFolder">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      New folder
+    </button>
+    <hr />
+    <button id="newSheetUpload">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Upload files…
+    </button>
+  </div>
+</div>
+
+<!-- ============ mobile row action sheet ============ -->
+<div id="rowSheetBackdrop">
+  <div id="rowSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="rowSheetTitle"></div>
+  </div>
+</div>
+
+<!-- ============ desktop row context menu ============ -->
+<div id="rowContextMenu"></div>
+
+<!-- ============ generic prompt modal ============ -->
+<div id="promptBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <h3 id="promptTitle">New file</h3>
+    <p class="hint" id="promptHint"></p>
+    <input type="text" id="promptInput" />
+    <div class="modal-actions">
+      <button id="promptCancel" class="btn secondary">Cancel</button>
+      <button id="promptConfirm" class="btn accent">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ zip decision modal ============ -->
+<div id="zipDecisionBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="zip-decision-icon">🗜️</div>
+    <div class="zip-decision-name" id="zipDecisionName">archive.zip</div>
+    <div class="zip-decision-meta" id="zipDecisionMeta"></div>
+    <div class="zip-decision-actions">
+      <button id="zipDecisionExtract" class="btn accent">Unzip &amp; merge into this folder</button>
+      <button id="zipDecisionKeep" class="btn secondary">Keep as a single .zip file</button>
+      <button id="zipDecisionCancel" class="btn ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ settings / repo manager modal ============ -->
+<div id="settingsBackdrop" class="modal-backdrop">
+  <div class="modal wide">
+    <h3>Settings</h3>
+    <p class="hint">Manage repositories and app preferences.</p>
+    <div class="modal-scroll">
+      <div class="rm-section">
+        <div class="rm-section-title">Active repository</div>
+        <div class="rm-active-card">
+          <div class="rm-name" id="settingsActiveRepoName">—</div>
+        </div>
+      </div>
+
+      <div class="rm-section">
+        <div class="rm-section-title">Your repositories</div>
+        <div id="rmRepoList"></div>
+        <button id="rmAddToggle" class="rm-add-toggle">+ Add a repository</button>
+        <div id="rmAddPanel" class="rm-add-panel">
+          <div class="rm-tabs">
+            <button id="rmTabBrowseBtn" class="rm-tab active">Browse your repos</button>
+            <button id="rmTabManualBtn" class="rm-tab">Add manually</button>
+          </div>
+          <div id="rmTabBrowse" class="rm-tab-panel active">
+            <input type="text" id="rmBrowseSearch" placeholder="Search your repositories…" />
+            <div id="rmBrowseResults" class="rm-browse-results"></div>
+          </div>
+          <div id="rmTabManual" class="rm-tab-panel">
+            <div class="rm-manual-grid">
+              <input type="text" id="rmManualOwner" placeholder="owner" />
+              <input type="text" id="rmManualRepo" placeholder="repo" />
+              <input type="text" id="rmManualBranch" class="rm-branch-field" placeholder="branch (optional — defaults to the repo's default branch)" />
+            </div>
+            <button id="rmManualVerifyBtn" class="btn accent block">Verify &amp; add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rm-section">
+        <div class="rm-section-title">Preferences</div>
+        <div class="rm-toggle-row">
+          <span>Show active repo on login screen</span>
+          <button id="rmShowOnLoginToggle" class="rm-switch-track" role="switch" aria-checked="true"><span class="rm-switch-knob"></span></button>
+        </div>
+        <div class="settings-row">
+          <span class="label">App install</span>
+          <span class="val" id="setInstallStatus">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="settingsClose" class="btn secondary">Close</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./scripts/main.js"></script>
+</body>
+</html>
