@@ -1,0 +1,57 @@
+/* ---------- staged changes drawer ---------- */
+#stageDrawer {
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  flex-shrink: 0;
+  max-height: 40vh;
+  display: flex; flex-direction: column;
+  position: relative; /* stacking context so it can sit above bottomNav on mobile */
+  z-index: 30;
+}
+#stageDrawerHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px var(--sp-4);
+  cursor: pointer;
+}
+#stageDrawerHeader .left { display: flex; align-items: center; gap: 10px; }
+#stageDrawerHeader .stage-count {
+  font-family: var(--mono); font-size: var(--fs-xs); font-weight: 700;
+  background: var(--ink); color: var(--paper); border-radius: 999px; padding: 2px 9px;
+}
+#stageDrawerHeader .stage-count.zero { background: var(--line); color: var(--muted); }
+#stageDrawerHeader .diffstat { font-family: var(--mono); font-size: 11px; display: flex; gap: 8px; }
+#stageDrawerHeader .diffstat .add { color: var(--green); }
+#stageDrawerHeader .diffstat .del { color: var(--coral); }
+#stageDrawerHeader .chev { width: 14px; height: 14px; color: var(--muted); transition: transform .15s ease; }
+#stageDrawerHeader .chev.collapsed { transform: rotate(180deg); }
+#stageList { overflow-y: auto; padding: 0 var(--sp-4); }
+#stageList.collapsed { display: none; }
+.diffRow {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12.5px;
+  padding: 6px 10px; border-radius: var(--radius-sm); margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+.diffRow.add { background: var(--green-bg); border-color: var(--green-line); }
+.diffRow.del { background: var(--coral-bg); border-color: var(--coral-line); }
+.diffRow.move { background: var(--blue-bg); border-color: #cfe0f8; }
+.diffRow .mark { width: 14px; font-weight: 700; flex-shrink: 0; }
+.diffRow.add .mark { color: var(--green); }
+.diffRow.del .mark { color: var(--coral); }
+.diffRow.move .mark { color: var(--blue); }
+.diffRow .path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diffRow .path .arrow { color: var(--muted); margin: 0 4px; }
+.diffRow .warn-icon { color: var(--accent-dark); flex-shrink: 0; }
+.diffRow .remove { color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 4px; flex-shrink: 0; }
+.diffRow .remove:hover { color: var(--ink); }
+#commitBar {
+  border-top: 1px solid var(--line-soft);
+  padding: var(--sp-3) var(--sp-4);
+  display: flex; gap: 10px; flex-shrink: 0;
+}
+#commitMsg {
+  flex: 1; padding: 10px 13px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line); background: var(--paper-sunken); color: var(--ink);
+  font-size: var(--fs-sm); font-family: var(--sans);
+}
+#commitMsg:focus { border-color: var(--accent); }

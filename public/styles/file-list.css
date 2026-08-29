@@ -1,0 +1,177 @@
+#breadcrumbBar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 10px var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+  flex-wrap: wrap;
+}
+#breadcrumbBar .crumb { cursor: pointer; padding: 3px 6px; border-radius: 5px; }
+#breadcrumbBar .crumb:hover { background: var(--paper-sunken); color: var(--ink); }
+#breadcrumbBar .crumb.current { color: var(--ink); font-weight: 700; }
+#breadcrumbBar .sep { color: var(--line); }
+
+#toolbar {
+  display: flex; align-items: center; gap: 8px;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+#toolbar input[type="text"].search {
+  flex: 1; min-width: 140px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--paper-sunken);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-family: var(--sans);
+}
+#toolbar input[type="text"].search:focus { border-color: var(--accent); }
+#selectAllToggle, #selectionBarAllToggle { accent-color: var(--accent-dark); flex-shrink: 0; width: 16px; height: 16px; }
+.toolbar-menu-wrap { position: relative; }
+.menu-pop {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
+  background: var(--paper-raised); border: 1px solid var(--line);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-pop);
+  padding: 6px; min-width: 190px; display: none;
+}
+.menu-pop.open { display: block; }
+.menu-pop button {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 8px 10px; border-radius: 7px; border: none; background: none;
+  color: var(--ink); font-size: var(--fs-sm); text-align: left; cursor: pointer;
+}
+.menu-pop button:hover { background: var(--paper-sunken); }
+.menu-pop button.danger-item { color: var(--coral); }
+.menu-pop button.danger-item:hover { background: var(--coral-bg); }
+.menu-pop hr { border: none; border-top: 1px solid var(--line-soft); margin: 5px 2px; }
+
+/* split-button dropdown (zip / individual download choice — section 6) */
+.split-btn { display: inline-flex; position: relative; }
+.split-btn .btn.primary-part { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.split-btn .split-toggle {
+  border-top-left-radius: 0; border-bottom-left-radius: 0;
+  border-left: 1px solid rgba(0,0,0,.12); padding-left: 8px; padding-right: 8px;
+}
+.split-btn .menu-pop { min-width: 260px; }
+.split-btn .menu-pop .menu-note { padding: 6px 10px; font-size: 10.5px; color: var(--muted); line-height: 1.4; }
+
+#rowContextMenu {
+  position: fixed; z-index: 95; display: none;
+  background: var(--paper-raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-float); padding: 4px; min-width: 170px;
+}
+#rowContextMenu.open { display: block; }
+#rowContextMenu button {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 8px 10px; border-radius: 6px; border: none; background: none;
+  font-size: var(--fs-sm); color: var(--ink); cursor: pointer;
+}
+#rowContextMenu button:hover { background: var(--paper-sunken); }
+#rowContextMenu button.danger-item { color: var(--coral); }
+#rowContextMenu button.danger-item:hover { background: var(--coral-bg); }
+#rowContextMenu hr { border: none; border-top: 1px solid var(--line-soft); margin: 4px 2px; }
+
+/* mobile bottom-sheet variant of the same row action menu (section 4.2) */
+#rowSheetBackdrop {
+  display: none; position: fixed; inset: 0; z-index: 96; background: rgba(30,25,15,.35);
+}
+#rowSheetBackdrop.open { display: flex; align-items: flex-end; }
+#rowSheet {
+  width: 100%; background: var(--paper-raised); border-radius: 16px 16px 0 0;
+  padding: var(--sp-2) var(--sp-2) calc(var(--sp-3) + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-float);
+}
+#rowSheet .sheet-handle { width: 36px; height: 4px; background: var(--line); border-radius: 999px; margin: 8px auto 6px; }
+#rowSheet .sheet-title { font-size: var(--fs-xs); color: var(--muted); padding: 4px 12px 8px; font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#rowSheet button {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 13px 14px; border-radius: 10px; border: none; background: none;
+  font-size: var(--fs-base); color: var(--ink); cursor: pointer;
+}
+#rowSheet button:active { background: var(--paper-sunken); }
+#rowSheet button.danger-item { color: var(--coral); }
+#rowSheet hr { border: none; border-top: 1px solid var(--line-soft); margin: 4px 6px; }
+
+#fileListScroll { flex: 1; overflow-y: auto; padding: var(--sp-2) var(--sp-4) var(--sp-4); }
+
+.frow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 8px; border-radius: var(--radius-sm);
+  font-size: 13px; border: 1px solid transparent;
+  cursor: pointer;
+}
+.frow:hover { background: var(--paper-sunken); border-color: var(--line); }
+.frow.dragging { opacity: 0.4; }
+.frow.drop-target { background: var(--accent-wash-strong); border-color: var(--accent); }
+.frow .ftype-ic { flex-shrink: 0; }
+.frow .ftype-ic.folder { color: var(--accent-dark); }
+.frow .ftype-ic.file { color: var(--muted); }
+.frow .ftype-ic.image { color: var(--violet); }
+.frow .name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.frow .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); }
+.frow .subtitle { display: none; font-size: 10.5px; color: var(--muted); font-family: var(--mono); }
+.frow .size { color: var(--muted); font-size: 11px; font-family: var(--mono); flex-shrink: 0; }
+.frow .size-warn { color: var(--accent-dark); }
+.frow .row-actions { display: none; align-items: center; gap: 2px; flex-shrink: 0; }
+.frow:hover .row-actions { display: flex; }
+.frow .row-actions button {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; border: none; background: none;
+  color: var(--muted); cursor: pointer;
+}
+/* Touch devices report no hover capability — treat the same as mobile
+   widths so a touch-capable laptop with a wide window still gets
+   tappable row actions instead of a permanently-hidden hover reveal. */
+@media (hover: none) {
+  .frow .row-actions { display: flex; }
+}
+.frow .row-actions button:hover { background: var(--line-soft); color: var(--ink); }
+.frow .row-actions .row-more { display: none; }
+.frow .row-actions button.danger:hover { background: var(--coral-bg); color: var(--coral); }
+.frow input[type="checkbox"] { accent-color: var(--accent-dark); flex-shrink: 0; }
+.frow input[type="text"].rename {
+  flex: 1; background: var(--paper); border: 1px solid var(--accent);
+  color: var(--ink); font-family: var(--mono); font-size: 13px; padding: 5px 8px; border-radius: 6px;
+}
+.frow.staged-add { background: var(--green-bg); }
+.frow.staged-del { background: var(--coral-bg); text-decoration: line-through; opacity: 0.7; }
+.frow.size-warn-row { outline: 1px dashed var(--accent); outline-offset: -1px; }
+
+#dropzone {
+  margin-top: var(--sp-4);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  background: var(--paper-sunken);
+  line-height: 1.6;
+  transition: padding .15s ease, background .15s ease, border-color .15s ease;
+  overflow: hidden;
+}
+#dropzone b { color: var(--ink-soft); }
+#dropzone.drag { border-color: var(--accent); color: var(--ink); background: var(--accent-wash); }
+#fileInput { display: none; }
+
+#dropzone .dz-full { display: none; padding: var(--sp-5) var(--sp-4); }
+#dropzone .dz-slim {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px var(--sp-4); font-size: var(--fs-xs);
+}
+#dropzone .dz-slim svg { color: var(--muted); }
+#dropzone.expanded .dz-full { display: block; }
+#dropzone.expanded .dz-slim { display: none; }
+#dropzone.drag .dz-slim { display: none; }
+#dropzone.drag .dz-full { display: block; }
+
+/* ---------- selection mode toolbar ---------- */
+#selectionBar {
+  display: none; align-items: center; gap: 10px;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+#selectionBar.active { display: flex; }
+#selectionBar .sel-count { font-size: var(--fs-sm); font-weight: 700; color: var(--ink); flex: 1; }
+#toolbar.selection-hidden { display: none; }

@@ -1,0 +1,155 @@
+/* Three tiers (section 4.1): mobile ≤640px, tablet 641–1024px, desktop >1024px.
+   Values mirrored in scripts/utils/breakpoints.js as MOBILE_MAX/TABLET_MAX —
+   CSS can't read custom properties inside a media query, so these numbers
+   are a known, intentionally-duplicated pair. Keep them in sync by hand. */
+
+/* ---------- shared: resize handles are desktop-only ---------- */
+@media (max-width: 1024px) {
+  .resize-handle { display: none; }
+}
+
+/* ---------- editor goes fullscreen below desktop ---------- */
+@media (max-width: 1024px) {
+  #editorPanel { position: fixed; inset: 0; z-index: 60; width: 100%; }
+}
+
+/* =========================================================
+   TABLET (641px – 1024px)
+   ========================================================= */
+@media (min-width: 641px) and (max-width: 1024px) {
+  #hamburgerBtn { display: flex; }
+  #treeSidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 55;
+    width: 75%; max-width: 380px; display: flex; flex-direction: column;
+    transform: translateX(-100%); transition: transform .18s ease;
+    box-shadow: var(--shadow-float);
+  }
+  #treeSidebar.mobile-open { display: flex; transform: translateX(0); }
+  #treeSidebarHeader {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--sp-2); margin-bottom: var(--sp-2);
+    border-bottom: 1px solid var(--line);
+  }
+  #bottomNav { display: none; }
+  .frow .row-actions { display: flex; }
+  .frow .row-actions button { width: 34px; height: 34px; }
+}
+
+/* =========================================================
+   MOBILE (≤640px)
+   ========================================================= */
+@media (max-width: 640px) {
+  #hamburgerBtn { display: flex; }
+  #treeSidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 55;
+    width: 84%; max-width: 320px; display: flex; flex-direction: column;
+    transform: translateX(-100%); transition: transform .18s ease;
+    box-shadow: var(--shadow-float);
+  }
+  #treeSidebar.mobile-open { display: flex; transform: translateX(0); }
+  #treeSidebarHeader {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--sp-2); margin-bottom: var(--sp-2);
+    border-bottom: 1px solid var(--line);
+  }
+
+  header .brand .title { display: none; }
+  header .brand .mark { width: 30px; height: 30px; }
+  header .repo-pill { flex: 1; min-width: 0; }
+  header .repo-pill span:first-child,
+  header .repo-pill b { overflow: hidden; text-overflow: ellipsis; }
+  #status { max-width: calc(100% - 28px); }
+  /* fold refresh + sign-out into an overflow menu to cut header clutter */
+  header .actions > #refreshBtn,
+  header .actions > #logoutBtn,
+  header .actions > #installBtn { display: none; }
+  #headerOverflowWrap { display: block; }
+
+  /* row-level tap targets: at least 48px tall (section 4.2 a11y), card-style
+     with the filename on one line and size/meta as a subtitle beneath it */
+  .frow { gap: 8px; padding: 9px 6px; min-height: 48px; }
+  .frow .name-col { justify-content: center; }
+  .frow .subtitle { display: block; }
+  .frow .size { display: none; }
+  .frow .row-actions { display: none !important; } /* mobile uses the ⋮ bottom-sheet instead of inline buttons */
+  .frow .row-actions .row-more { display: flex !important; }
+  .frow input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* toolbar/selection bar collapse into the bottom nav's Select mode */
+  #toolbar { display: none; }
+  #selectionBar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 58;
+    background: var(--paper-raised); border-top: 1px solid var(--line);
+    padding: var(--sp-3) var(--sp-4) calc(var(--sp-3) + env(safe-area-inset-bottom));
+  }
+  #selectionBar.active { display: flex; }
+
+  #bottomNav { display: flex; }
+  #fileListScroll { padding-bottom: 76px; } /* clear the fixed bottom nav */
+  #stageDrawer { position: relative; z-index: 59; } /* stacks above bottomNav, never overlapped (section 11) */
+
+  /* settings + zip-decision modals become fullscreen bottom sheets */
+  .modal-backdrop:has(.modal.wide),
+  .modal-backdrop.wide-backdrop { padding: 0; align-items: stretch; }
+  .modal.wide { max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; }
+}
+
+/* Tablet also gets the bottom-sheet settings modal per section 10 */
+@media (max-width: 1024px) {
+  .modal-backdrop:has(.modal.wide),
+  .modal-backdrop.wide-backdrop { padding: 0; align-items: stretch; }
+  .modal.wide { max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; }
+}
+
+@media (max-width: 520px) {
+  #editorHeader .etool-standalone { display: none; }
+  #editorHeader .etool-overflow-wrap { display: inline-flex; }
+}
+
+/* ---------- mobile bottom action bar (section 4.2) ---------- */
+#bottomNav {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 57;
+  background: var(--paper-raised); border-top: 1px solid var(--line);
+  padding: 6px var(--sp-2) calc(6px + env(safe-area-inset-bottom));
+  align-items: stretch; justify-content: space-between; gap: 2px;
+}
+#bottomNav button {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; padding: 7px 2px; border-radius: 10px;
+  color: var(--ink-soft); font-size: 10px; font-weight: 600; cursor: pointer;
+  position: relative;
+}
+#bottomNav button:active { background: var(--paper-sunken); }
+#bottomNav button.active { color: var(--accent-dark); }
+#bottomNav .nav-badge {
+  position: absolute; top: 2px; right: calc(50% - 20px);
+  min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px;
+  background: var(--accent); color: #3a2708; font-size: 9px; font-weight: 800;
+  display: none; align-items: center; justify-content: center; font-family: var(--sans);
+}
+#bottomNav .nav-badge.show { display: flex; }
+
+/* ---------- new-item bottom sheet (mobile "New" action) ---------- */
+#newSheetBackdrop {
+  display: none; position: fixed; inset: 0; z-index: 96; background: rgba(30,25,15,.35);
+}
+#newSheetBackdrop.open { display: flex; align-items: flex-end; }
+#newSheet {
+  width: 100%; background: var(--paper-raised); border-radius: 16px 16px 0 0;
+  padding: var(--sp-2) var(--sp-2) calc(var(--sp-3) + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-float);
+}
+#newSheet .sheet-handle { width: 36px; height: 4px; background: var(--line); border-radius: 999px; margin: 8px auto 6px; }
+#newSheet button {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 13px 14px; border-radius: 10px; border: none; background: none;
+  font-size: var(--fs-base); color: var(--ink); cursor: pointer;
+}
+#newSheet button:active { background: var(--paper-sunken); }
+#newSheet hr { border: none; border-top: 1px solid var(--line-soft); margin: 4px 6px; }
+
+/* ---------- folder drawer file-count badge (section 4.2) ---------- */
+@media (max-width: 1024px) {
+  .tnode-row .count-badge { display: inline-flex; align-items: center; }
+}
