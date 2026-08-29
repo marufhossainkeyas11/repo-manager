@@ -14,15 +14,5 @@
     "GITHUB_OWNER": "marufhossainkeyas11",
     "GITHUB_REPO": "Ip",
     "GITHUB_BRANCH": "main"
-  },
-  "kv_namespaces": [
-    {
-      "binding": "RATE_LIMIT",
-      "id": "9869ae2e17b54fad86f7da17be7274d3"
-    },
-    {
-      "binding": "CONFIG",
-      "id": "42ca553022494f55a30e807f0fe899d2"
-    }
-  ]
+  }
 }
